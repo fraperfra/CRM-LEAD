@@ -5,6 +5,7 @@ import { LayoutDashboard, Users, Activity, BarChart3, Settings, LogOut, Menu, X,
 import { motion, AnimatePresence } from 'framer-motion';
 import { usePathname, useRouter } from 'next/navigation';
 import NotificationCenter from '../../components/layout/NotificationCenter';
+import MobileBottomNav from '../../components/mobile/MobileBottomNav';
 
 interface DashboardLayoutProps {
   children: ReactNode;
@@ -89,12 +90,15 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         </header>
 
         {/* Page Content */}
-        <main className="flex-1 overflow-y-auto p-4 md:p-8 scroll-smooth">
+        <main className="flex-1 overflow-y-auto p-4 md:p-8 pb-20 md:pb-8 scroll-smooth">
           <div className="max-w-7xl mx-auto">
             {children}
           </div>
         </main>
       </div>
+
+      {/* Mobile Bottom Navigation */}
+      <MobileBottomNav />
     </div>
   );
 };

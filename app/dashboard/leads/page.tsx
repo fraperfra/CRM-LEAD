@@ -2,14 +2,16 @@
 
 import { useState, useEffect } from 'react';
 import { supabase, Lead } from '@/lib/supabase';
-import { LeadsTable } from '@/components/leads/LeadsTable';
 import { LeadFilters, FilterValues } from '@/components/leads/LeadFilters';
-import { Plus } from 'lucide-react';
+import LeadsTable from '@/components/leads/LeadsTable';
+import MobileLeadCard from '@/components/mobile/MobileLeadCard';
+import { useIsMobile } from '@/hooks/useIsMobile';
 
 export default function LeadsPage() {
   const [leads, setLeads] = useState<Lead[]>([]);
   const [filteredLeads, setFilteredLeads] = useState<Lead[]>([]);
   const [loading, setLoading] = useState(true);
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     fetchLeads();
@@ -22,11 +24,9 @@ export default function LeadsPage() {
       .is('deleted_at', null)
       .order('created_at', { ascending: false });
 
-    if (error) {
-      console.error('Error fetching leads:', error);
-    } else {
-      setLeads(data || []);
-      setFilteredLeads(data || []);
+    if (!error && data) {
+      setLeads(data);
+      setFilteredLeads(data);
     }
     setLoading(false);
   }
@@ -41,23 +41,26 @@ export default function LeadsPage() {
         (lead) =>
           lead.nome?.toLowerCase().includes(search) ||
           lead.email?.toLowerCase().includes(search) ||
-          lead.telefono?.includes(search)
+          lead.telefono?.toLowerCase().includes(search) ||
+          lead.indirizzo?.toLowerCase().includes(search)
       );
     }
 
     // Status filter
-    if (filters.status) {
-      filtered = filtered.filter((lead) => lead.status === filters.status);
+    if (filters.status.length > 0) {
+      filtered = filtered.filter((lead) => filters.status.includes(lead.status));
     }
 
     // Quality filter
-    if (filters.quality) {
-      filtered = filtered.filter((lead) => lead.lead_quality === filters.quality);
+    if (filters.quality.length > 0) {
+      filtered = filtered.filter((lead) => filters.quality.includes(lead.lead_quality));
     }
 
     // Tipologia filter
-    if (filters.tipologia) {
-      filtered = filtered.filter((lead) => lead.tipologia === filters.tipologia);
+    if (filters.tipologia.length > 0) {
+      filtered = filtered.filter((lead) =>
+        lead.tipologia && filters.tipologia.includes(lead.tipologia)
+      );
     }
 
     setFilteredLeads(filtered);
@@ -74,33 +77,33 @@ export default function LeadsPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Leads</h1>
-          <p className="text-gray-500 mt-1">Gestisci tutti i tuoi lead</p>
-        </div>
-        <button className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium">
-          <Plus className="w-5 h-5" />
-          Nuovo Lead
-        </button>
+      <div>
+        <h1 className="text-3xl font-bold text-gray-900">Leads</h1>
+        <p className="text-gray-500 mt-1">
+          {filteredLeads.length} {filteredLeads.length === 1 ? 'lead trovato' : 'lead trovati'}
+        </p>
       </div>
 
       {/* Filters */}
       <LeadFilters onFilterChange={handleFilterChange} />
 
-      {/* Results Count */}
-      <div className="text-sm text-gray-500">
-        {filteredLeads.length === leads.length ? (
-          <span>Mostrando tutti i {leads.length} lead</span>
-        ) : (
-          <span>
-            Mostrando {filteredLeads.length} di {leads.length} lead
-          </span>
-        )}
-      </div>
+      {/* Desktop: Table View */}
+      {!isMobile && <LeadsTable leads={filteredLeads} />}
 
-      {/* Table */}
-      <LeadsTable leads={filteredLeads} />
+      {/* Mobile: Card View */}
+      {isMobile && (
+        <div className="space-y-3">
+          {filteredLeads.length === 0 ? (
+            <div className="bg-white rounded-lg border border-gray-200 p-8 text-center">
+              <p className="text-gray-500">Nessun lead trovato</p>
+            </div>
+          ) : (
+            filteredLeads.map((lead) => (
+              <MobileLeadCard key={lead.id} lead={lead} />
+            ))
+          )}
+        </div>
+      )}
     </div>
   );
 }

@@ -1,135 +1,171 @@
+"use client";
+
 import { useState } from 'react';
-import { Activity } from '../../lib/supabase';
-import { formatDate } from '../../lib/utils';
-import { Mail, Phone, MessageSquare, StickyNote, Users, Plus } from 'lucide-react';
+import { Activity } from '@/lib/supabase';
+import { Mail, MessageSquare, Phone, Calendar, FileText, Plus } from 'lucide-react';
+import { formatDate } from '@/lib/utils';
 
 interface ActivityTimelineProps {
+  leadId: string;
   activities: Activity[];
-  onAddActivity: (activity: Omit<Activity, 'id' | 'created_at' | 'lead_id'>) => void;
 }
 
-const ActivityTimeline: React.FC<ActivityTimelineProps> = ({ activities, onAddActivity }) => {
-  const [showForm, setShowForm] = useState(false);
-  const [newType, setNewType] = useState<'email' | 'whatsapp' | 'call' | 'meeting' | 'note'>('note');
-  const [subject, setSubject] = useState('');
-  const [content, setContent] = useState('');
+const activityIcons = {
+  email: Mail,
+  whatsapp: MessageSquare,
+  call: Phone,
+  meeting: Calendar,
+  note: FileText,
+  sms: MessageSquare,
+  documento: FileText,
+};
 
-  const handleSubmit = (e: React.FormEvent) => {
+const activityColors = {
+  email: 'text-blue-600 bg-blue-50',
+  whatsapp: 'text-green-600 bg-green-50',
+  call: 'text-purple-600 bg-purple-50',
+  meeting: 'text-orange-600 bg-orange-50',
+  note: 'text-gray-600 bg-gray-50',
+  sms: 'text-pink-600 bg-pink-50',
+  documento: 'text-indigo-600 bg-indigo-50',
+};
+
+export function ActivityTimeline({ leadId, activities }: ActivityTimelineProps) {
+  const [isAddingActivity, setIsAddingActivity] = useState(false);
+  const [newActivity, setNewActivity] = useState({
+    type: 'note' as Activity['type'],
+    subject: '',
+    content: '',
+  });
+
+  const handleAddActivity = async (e: React.FormEvent) => {
     e.preventDefault();
-    onAddActivity({
-      type: newType,
-      subject: subject || (newType === 'note' ? 'Nota rapida' : 'Nuova attività'),
-      content,
-      status: 'completed'
-    });
-    setSubject('');
-    setContent('');
-    setShowForm(false);
-  };
 
-  const getIcon = (type: string) => {
-    switch (type) {
-      case 'email': return <Mail className="h-4 w-4 text-blue-500" />;
-      case 'whatsapp': return <MessageSquare className="h-4 w-4 text-green-500" />;
-      case 'call': return <Phone className="h-4 w-4 text-purple-500" />;
-      case 'meeting': return <Users className="h-4 w-4 text-orange-500" />;
-      case 'note': return <StickyNote className="h-4 w-4 text-yellow-500" />;
-      default: return <StickyNote className="h-4 w-4 text-gray-500" />;
-    }
+    // TODO: Implement server action to add activity
+    console.log('Adding activity:', newActivity);
+
+    setNewActivity({ type: 'note', subject: '', content: '' });
+    setIsAddingActivity(false);
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h3 className="text-lg font-semibold text-gray-900">Timeline Attività</h3>
+    <div className="space-y-4">
+      {/* Add Activity Button */}
+      {!isAddingActivity ? (
         <button
-          onClick={() => setShowForm(!showForm)}
-          className="flex items-center gap-2 px-3 py-1.5 bg-gray-900 text-white rounded-md text-sm hover:bg-gray-800 transition-colors"
+          onClick={() => setIsAddingActivity(true)}
+          className="w-full flex items-center justify-center gap-2 px-4 py-2 border-2 border-dashed border-gray-300 rounded-lg text-gray-600 hover:border-blue-400 hover:text-blue-600 hover:bg-blue-50 transition-colors"
         >
-          <Plus size={16} /> Aggiungi
+          <Plus className="w-4 h-4" />
+          Aggiungi Attività
         </button>
-      </div>
+      ) : (
+        <form onSubmit={handleAddActivity} className="bg-gray-50 rounded-lg p-4 space-y-3">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Tipo
+            </label>
+            <select
+              value={newActivity.type}
+              onChange={(e) => setNewActivity({ ...newActivity, type: e.target.value as Activity['type'] })}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            >
+              <option value="note">Nota</option>
+              <option value="email">Email</option>
+              <option value="whatsapp">WhatsApp</option>
+              <option value="call">Chiamata</option>
+              <option value="meeting">Meeting</option>
+            </select>
+          </div>
 
-      {showForm && (
-        <form onSubmit={handleSubmit} className="bg-gray-50 p-4 rounded-lg border border-gray-200 mb-6 animate-in fade-in slide-in-from-top-2">
-          <div className="grid gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Tipo</label>
-              <select
-                value={newType}
-                onChange={(e) => setNewType(e.target.value as any)}
-                className="w-full rounded-md border border-gray-300 p-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-              >
-                <option value="note">Nota</option>
-                <option value="call">Chiamata</option>
-                <option value="email">Email</option>
-                <option value="whatsapp">WhatsApp</option>
-                <option value="meeting">Meeting</option>
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Oggetto</label>
-              <input
-                type="text"
-                value={subject}
-                onChange={(e) => setSubject(e.target.value)}
-                placeholder="Oggetto dell'attività"
-                className="w-full rounded-md border border-gray-300 p-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Contenuto</label>
-              <textarea
-                value={content}
-                onChange={(e) => setContent(e.target.value)}
-                placeholder="Dettagli..."
-                rows={3}
-                className="w-full rounded-md border border-gray-300 p-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-              />
-            </div>
-            <div className="flex justify-end gap-2">
-              <button
-                type="button"
-                onClick={() => setShowForm(false)}
-                className="px-3 py-2 text-sm text-gray-600 hover:text-gray-800"
-              >
-                Annulla
-              </button>
-              <button
-                type="submit"
-                className="px-3 py-2 bg-blue-600 text-white rounded-md text-sm hover:bg-blue-700"
-              >
-                Salva Attività
-              </button>
-            </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Oggetto
+            </label>
+            <input
+              type="text"
+              value={newActivity.subject}
+              onChange={(e) => setNewActivity({ ...newActivity, subject: e.target.value })}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Contenuto
+            </label>
+            <textarea
+              value={newActivity.content}
+              onChange={(e) => setNewActivity({ ...newActivity, content: e.target.value })}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              rows={3}
+              required
+            />
+          </div>
+
+          <div className="flex gap-2">
+            <button
+              type="submit"
+              className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium"
+            >
+              Salva
+            </button>
+            <button
+              type="button"
+              onClick={() => setIsAddingActivity(false)}
+              className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
+            >
+              Annulla
+            </button>
           </div>
         </form>
       )}
 
-      <div className="relative space-y-8 pl-4 before:absolute before:left-[11px] before:top-2 before:h-full before:w-0.5 before:bg-gray-200">
+      {/* Activities List */}
+      <div className="space-y-3">
         {activities.length === 0 ? (
-          <p className="text-gray-500 text-sm italic pl-4">Nessuna attività registrata.</p>
+          <p className="text-sm text-gray-500 text-center py-8">
+            Nessuna attività registrata
+          </p>
         ) : (
-          activities.map((activity) => (
-            <div key={activity.id} className="relative pl-6">
-              <span className="absolute left-[-13px] top-1 flex h-6 w-6 items-center justify-center rounded-full bg-white ring-4 ring-white border border-gray-200 shadow-sm">
-                {getIcon(activity.type)}
-              </span>
-              <div className="flex flex-col gap-1">
-                <div className="flex items-center gap-2">
-                  <span className="font-semibold text-gray-900">{activity.subject}</span>
-                  <span className="text-xs text-gray-500">• {formatDate(activity.created_at)}</span>
+          activities.map((activity) => {
+            const Icon = activityIcons[activity.type as keyof typeof activityIcons] || FileText;
+            const colorClass = activityColors[activity.type as keyof typeof activityColors] || 'text-gray-600 bg-gray-50';
+
+            return (
+              <div
+                key={activity.id}
+                className="flex gap-3 p-3 rounded-lg border border-gray-200 hover:border-gray-300 hover:shadow-sm transition-all"
+              >
+                <div className={`p-2 rounded-lg ${colorClass} flex-shrink-0`}>
+                  <Icon className="w-4 h-4" />
                 </div>
-                <p className="text-sm text-gray-600 bg-gray-50 p-3 rounded-md border border-gray-100">
-                  {activity.content}
-                </p>
+
+                <div className="flex-1 min-w-0">
+                  <h4 className="text-sm font-semibold text-gray-900 mb-0.5">
+                    {activity.subject}
+                  </h4>
+                  <p className="text-sm text-gray-600 mb-2">
+                    {activity.content}
+                  </p>
+                  <div className="flex items-center gap-3 text-xs text-gray-500">
+                    <span>{formatDate(activity.created_at)}</span>
+                    {activity.status && (
+                      <span className={`px-2 py-0.5 rounded-full ${activity.status === 'completed' ? 'bg-green-100 text-green-700' :
+                          activity.status === 'sent' ? 'bg-blue-100 text-blue-700' :
+                            'bg-gray-100 text-gray-700'
+                        }`}>
+                        {activity.status}
+                      </span>
+                    )}
+                  </div>
+                </div>
               </div>
-            </div>
-          ))
+            );
+          })
         )}
       </div>
     </div>
   );
-};
-
-export default ActivityTimeline;
+}

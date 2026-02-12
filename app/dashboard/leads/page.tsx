@@ -1,55 +1,106 @@
 "use client";
 
-import { useEffect, useState } from 'react';
-import LeadsTable from '../../../components/leads/LeadsTable';
-import { fetchLeads, Lead } from '../../../lib/supabase';
-import { PlusCircle } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { useState, useEffect } from 'react';
+import { supabase, Lead } from '@/lib/supabase';
+import { LeadsTable } from '@/components/leads/LeadsTable';
+import { LeadFilters, FilterValues } from '@/components/leads/LeadFilters';
+import { Plus } from 'lucide-react';
 
-interface LeadsPageProps {
-  onNavigate: (path: string) => void;
-}
-
-const LeadsPage: React.FC<LeadsPageProps> = ({ onNavigate }) => {
+export default function LeadsPage() {
   const [leads, setLeads] = useState<Lead[]>([]);
+  const [filteredLeads, setFilteredLeads] = useState<Lead[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchLeads().then(data => {
-      setLeads(data);
-      setLoading(false);
-    });
+    fetchLeads();
   }, []);
 
+  async function fetchLeads() {
+    const { data, error } = await supabase
+      .from('leads')
+      .select('*')
+      .is('deleted_at', null)
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('Error fetching leads:', error);
+    } else {
+      setLeads(data || []);
+      setFilteredLeads(data || []);
+    }
+    setLoading(false);
+  }
+
+  const handleFilterChange = (filters: FilterValues) => {
+    let filtered = [...leads];
+
+    // Search filter
+    if (filters.search) {
+      const search = filters.search.toLowerCase();
+      filtered = filtered.filter(
+        (lead) =>
+          lead.nome?.toLowerCase().includes(search) ||
+          lead.email?.toLowerCase().includes(search) ||
+          lead.telefono?.includes(search)
+      );
+    }
+
+    // Status filter
+    if (filters.status) {
+      filtered = filtered.filter((lead) => lead.status === filters.status);
+    }
+
+    // Quality filter
+    if (filters.quality) {
+      filtered = filtered.filter((lead) => lead.lead_quality === filters.quality);
+    }
+
+    // Tipologia filter
+    if (filters.tipologia) {
+      filtered = filtered.filter((lead) => lead.tipologia === filters.tipologia);
+    }
+
+    setFilteredLeads(filtered);
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
+
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="space-y-6"
-    >
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 tracking-tight">Gestione Lead</h1>
-          <p className="text-gray-500 mt-1">Visualizza e gestisci tutte le richieste di valutazione.</p>
+          <h1 className="text-3xl font-bold text-gray-900">Leads</h1>
+          <p className="text-gray-500 mt-1">Gestisci tutti i tuoi lead</p>
         </div>
-        <button className="flex items-center gap-2 px-5 py-2.5 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-all shadow-md hover:shadow-lg font-medium active:scale-95">
-          <PlusCircle size={18} />
+        <button className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium">
+          <Plus className="w-5 h-5" />
           Nuovo Lead
         </button>
       </div>
 
-      {loading ? (
-        <div className="h-64 flex items-center justify-center bg-white/50 backdrop-blur-sm rounded-2xl border border-white/40">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-        </div>
-      ) : (
-        <LeadsTable
-          leads={leads}
-          onNavigate={(id) => onNavigate(`/dashboard/leads/${id}`)}
-        />
-      )}
-    </motion.div>
-  );
-};
+      {/* Filters */}
+      <LeadFilters onFilterChange={handleFilterChange} />
 
-export default LeadsPage;
+      {/* Results Count */}
+      <div className="text-sm text-gray-500">
+        {filteredLeads.length === leads.length ? (
+          <span>Mostrando tutti i {leads.length} lead</span>
+        ) : (
+          <span>
+            Mostrando {filteredLeads.length} di {leads.length} lead
+          </span>
+        )}
+      </div>
+
+      {/* Table */}
+      <LeadsTable leads={filteredLeads} />
+    </div>
+  );
+}

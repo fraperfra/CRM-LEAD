@@ -1,73 +1,58 @@
-import React from 'react';
-import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer
-} from 'recharts';
+"use client";
+
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 interface LeadsChartProps {
-  data: { date: string; count: number }[];
+  data: {
+    date: string;
+    count: number;
+  }[];
 }
 
-const LeadsChart: React.FC<LeadsChartProps> = ({ data }) => {
+export function LeadsChart({ data }: LeadsChartProps) {
   return (
-    <div className="h-[350px] w-full bg-white/70 backdrop-blur-xl p-6 rounded-2xl shadow-sm border border-white/60">
-      <h3 className="text-lg font-bold text-gray-800 mb-6 flex items-center gap-2">
-        <div className="w-2 h-6 bg-blue-500 rounded-full"></div>
-        Andamento Lead
+    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+      <h3 className="text-lg font-semibold text-gray-900 mb-4">
+        Andamento Lead (Ultimi 30 giorni)
       </h3>
-      <div className="h-[250px] w-full">
+
+      <div className="h-[300px]">
         <ResponsiveContainer width="100%" height="100%">
-          <LineChart
-            data={data}
-            margin={{
-              top: 5,
-              right: 10,
-              left: -10,
-              bottom: 0,
-            }}
-          >
-            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
-            <XAxis 
-              dataKey="date" 
-              tick={{ fontSize: 11, fill: '#64748b' }} 
-              axisLine={false}
+          <LineChart data={data}>
+            <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+            <XAxis
+              dataKey="date"
+              stroke="#9ca3af"
+              fontSize={12}
               tickLine={false}
-              dy={10}
             />
-            <YAxis 
-              tick={{ fontSize: 11, fill: '#64748b' }} 
-              axisLine={false}
+            <YAxis
+              stroke="#9ca3af"
+              fontSize={12}
               tickLine={false}
-              allowDecimals={false}
+              axisLine={false}
             />
-            <Tooltip 
-              contentStyle={{ 
-                backgroundColor: 'rgba(255, 255, 255, 0.9)', 
-                borderRadius: '12px', 
-                border: 'none', 
-                boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)' 
+            <Tooltip
+              contentStyle={{
+                backgroundColor: '#fff',
+                border: '1px solid #e5e7eb',
+                borderRadius: '0.5rem',
+                padding: '0.5rem 0.75rem',
               }}
-              itemStyle={{ color: '#1e293b', fontWeight: 600 }}
-              labelStyle={{ color: '#64748b', marginBottom: '0.5rem' }}
+              labelStyle={{ color: '#6b7280', fontSize: '0.875rem' }}
+              itemStyle={{ color: '#3b82f6', fontSize: '0.875rem', fontWeight: 600 }}
             />
             <Line
               type="monotone"
               dataKey="count"
               stroke="#3b82f6"
-              strokeWidth={3}
-              dot={{ r: 4, fill: '#3b82f6', strokeWidth: 2, stroke: '#fff' }}
-              activeDot={{ r: 6, fill: '#2563eb', stroke: '#dbeafe', strokeWidth: 4 }}
+              strokeWidth={2}
+              dot={{ fill: '#3b82f6', r: 4 }}
+              activeDot={{ r: 6 }}
             />
           </LineChart>
         </ResponsiveContainer>
       </div>
     </div>
   );
-};
-
-export default LeadsChart;
+}

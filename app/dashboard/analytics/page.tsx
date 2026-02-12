@@ -1,5 +1,6 @@
 "use client";
 
+import { Users, Clock, DollarSign, TrendingUp } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import {
@@ -66,36 +67,36 @@ export default function AnalyticsPage() {
             {/* KPI Cards */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 <KPICard
-                    title="Conversion Rate"
+                    title="Tasso di Conversione"
                     value={`${conversionRate}%`}
                     subtitle="Lead vinti su totali"
                     trend={{ value: 0.5, isPositive: true }}
-                    icon={<TrendingUp className="w-6 h-6" />}
+                    iconName="trending-up"
                     color="green"
                 />
 
                 <KPICard
                     title="Tempo Medio Conversione"
                     value={avgConversionTime}
-                    subtitle="Giorni da nuovo a vinto"
-                    trend={{ value: 3, isPositive: false }}
-                    icon={<Clock className="w-6 h-6" />}
+                    subtitle="Giorni dalla creazione"
+                    trend={{ value: 2.3, isPositive: false }}
+                    iconName="clock"
                     color="blue"
                 />
 
                 <KPICard
                     title="Valore Medio Immobile"
                     value={formatCurrency(avgPropertyValue)}
-                    subtitle="Valutazione stimata"
-                    icon={<DollarSign className="w-6 h-6" />}
+                    subtitle="Media valutazioni"
+                    iconName="dollar-sign"
                     color="purple"
                 />
 
                 <KPICard
-                    title="Top Canale"
-                    value={topSource}
-                    subtitle={`${leadsBySource[0]?.value || 0} lead`}
-                    icon={<Users className="w-6 h-6" />}
+                    title="Principale Fonte Lead"
+                    value={topSource || 'N/A'}
+                    subtitle="Canale più efficace"
+                    iconName="users"
                     color="orange"
                 />
             </div>

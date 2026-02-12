@@ -1,4 +1,3 @@
-import { Users, Flame, ThermometerSun, Award } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { StatsCard } from '@/components/dashboard/StatsCards';
 import { LeadsChart } from '@/components/dashboard/LeadsChart';
@@ -83,25 +82,25 @@ export default async function DashboardPage() {
         <StatsCard
           title="Totale Lead"
           value={stats.totalLeads}
-          icon={Users}
+          iconName="users"
           color="blue"
         />
         <StatsCard
           title="Lead HOT"
           value={stats.hotLeads}
-          icon={Flame}
+          iconName="flame"
           color="red"
         />
         <StatsCard
           title="Lead WARM"
           value={stats.warmLeads}
-          icon={ThermometerSun}
+          iconName="thermometer"
           color="orange"
         />
         <StatsCard
           title="Contratti Vinti"
           value={stats.wonLeads}
-          icon={Award}
+          iconName="award"
           color="green"
         />
       </div>

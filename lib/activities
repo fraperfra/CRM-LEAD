@@ -1,0 +1,32 @@
+import { supabase, Activity } from '@/lib/supabase';
+
+// GET: attività per lead
+export async function getActivitiesByLead(leadId: string) {
+  const { data, error } = await supabase
+    .from('activities')
+    .select('*')
+    .eq('lead_id', leadId)
+    .order('created_at', { ascending: false });
+
+  if (error) throw error;
+  return data as Activity[];
+}
+
+// CREATE: nuova attività
+export async function createActivity(activityData: Partial<Activity>) {
+  const { data, error } = await supabase
+    .from('activities')
+    .insert([activityData])
+    .select()
+    .single();
+
+  if (error) throw error;
+
+  // Update last_contact_date del lead
+  await supabase
+    .from('leads')
+    .update({ last_contact_date: new Date().toISOString() })
+    .eq('id', activityData.lead_id);
+
+  return data as Activity;
+}

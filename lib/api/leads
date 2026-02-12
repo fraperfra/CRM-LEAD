@@ -1,0 +1,112 @@
+import { supabase, supabaseAdmin, Lead } from '@/lib/supabase';
+
+// GET: tutti i lead con filtri
+export async function getLeads(filters?: {
+  status?: string[];
+  lead_quality?: string[];
+  search?: string;
+  limit?: number;
+  offset?: number;
+}) {
+  let query = supabase
+    .from('leads')
+    .select('*', { count: 'exact' })
+    .is('deleted_at', null)
+    .order('created_at', { ascending: false });
+
+  if (filters?.status?.length) {
+    query = query.in('status', filters.status);
+  }
+
+  if (filters?.lead_quality?.length) {
+    query = query.in('lead_quality', filters.lead_quality);
+  }
+
+  if (filters?.search) {
+    query = query.or(
+      `nome.ilike.%${filters.search}%,email.ilike.%${filters.search}%,telefono.ilike.%${filters.search}%`
+    );
+  }
+
+  if (filters?.limit) {
+    query = query.limit(filters.limit);
+  }
+
+  if (filters?.offset) {
+    query = query.range(filters.offset, filters.offset + (filters.limit || 20) - 1);
+  }
+
+  const { data, error, count } = await query;
+
+  if (error) throw error;
+
+  return { leads: data as Lead[], total: count || 0 };
+}
+
+// GET: singolo lead
+export async function getLead(id: string) {
+  const { data, error } = await supabase
+    .from('leads')
+    .select('*')
+    .eq('id', id)
+    .single();
+
+  if (error) throw error;
+  return data as Lead;
+}
+
+// CREATE: nuovo lead
+export async function createLead(leadData: Partial<Lead>) {
+  const { data, error } = await supabase
+    .from('leads')
+    .insert([leadData])
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data as Lead;
+}
+
+// UPDATE: modifica lead
+export async function updateLead(id: string, updates: Partial<Lead>) {
+  const { data, error } = await supabase
+    .from('leads')
+    .update(updates)
+    .eq('id', id)
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data as Lead;
+}
+
+// DELETE: soft delete lead
+export async function deleteLead(id: string) {
+  const { error } = await supabase
+    .from('leads')
+    .update({ deleted_at: new Date().toISOString() })
+    .eq('id', id);
+
+  if (error) throw error;
+}
+
+// GET: dashboard stats
+export async function getDashboardStats() {
+  const { data, error } = await supabase
+    .from('dashboard_stats')
+    .select('*')
+    .single();
+
+  if (error) throw error;
+  return data;
+}
+
+// GET: lead con follow-up oggi
+export async function getFollowUpToday() {
+  const { data, error } = await supabase
+    .from('leads_followup_today')
+    .select('*');
+
+  if (error) throw error;
+  return data as Lead[];
+}

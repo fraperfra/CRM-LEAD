@@ -10,7 +10,7 @@ interface KPICardProps {
         value: number;
         isPositive: boolean;
     };
-    icon: React.ReactNode;
+    iconName: 'trending-up' | 'clock' | 'dollar-sign' | 'users';
     color: 'blue' | 'green' | 'purple' | 'orange';
 }
 
@@ -21,12 +21,21 @@ const colorClasses = {
     orange: 'bg-orange-50 text-orange-600',
 };
 
-export function KPICard({ title, value, subtitle, trend, icon, color }: KPICardProps) {
+const iconMap = {
+    'trending-up': TrendingUp,
+    'clock': Clock,
+    'dollar-sign': DollarSign,
+    'users': Users,
+};
+
+export function KPICard({ title, value, subtitle, trend, iconName, color }: KPICardProps) {
+    const Icon = iconMap[iconName];
+
     return (
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
             <div className="flex items-start justify-between mb-4">
                 <div className={`p-3 rounded-lg ${colorClasses[color]}`}>
-                    {icon}
+                    <Icon className="w-6 h-6" />
                 </div>
                 {trend && (
                     <div className={`flex items-center gap-1 px-2 py-1 rounded-md text-sm font-medium ${trend.isPositive ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'

@@ -1,12 +1,11 @@
 "use client";
 
-import { LucideIcon } from 'lucide-react';
-import { ReactNode } from 'react';
+import { Users, Flame, ThermometerSun, Award, TrendingUp, Clock, DollarSign } from 'lucide-react';
 
 interface StatsCardProps {
     title: string;
     value: string | number;
-    icon: LucideIcon;
+    iconName: 'users' | 'flame' | 'thermometer' | 'award' | 'trending-up' | 'clock' | 'dollar-sign';
     trend?: {
         value: number;
         isPositive: boolean;
@@ -23,14 +22,26 @@ const colorClasses = {
     purple: 'bg-purple-50 text-purple-600',
 };
 
+const iconMap = {
+    'users': Users,
+    'flame': Flame,
+    'thermometer': ThermometerSun,
+    'award': Award,
+    'trending-up': TrendingUp,
+    'clock': Clock,
+    'dollar-sign': DollarSign,
+};
+
 export function StatsCard({
     title,
     value,
-    icon: Icon,
+    iconName,
     trend,
     color = 'blue',
     subtitle
 }: StatsCardProps) {
+    const Icon = iconMap[iconName];
+
     return (
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
             <div className="flex items-center justify-between">

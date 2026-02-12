@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { supabase, Lead } from '@/lib/supabase';
 import { LeadFilters, FilterValues } from '@/components/leads/LeadFilters';
-import LeadsTable from '@/components/leads/LeadsTable';
+import { LeadsTable } from '@/components/leads/LeadsTable';
 import MobileLeadCard from '@/components/mobile/MobileLeadCard';
 import { useIsMobile } from '@/hooks/useIsMobile';
 

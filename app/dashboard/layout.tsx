@@ -6,6 +6,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { usePathname, useRouter } from 'next/navigation';
 import NotificationCenter from '../../components/layout/NotificationCenter';
 import MobileBottomNav from '../../components/mobile/MobileBottomNav';
+import CommandPalette from '../../components/search/CommandPalette';
+import { useCommandPalette } from '../../hooks/useCommandPalette';
 
 interface DashboardLayoutProps {
   children: ReactNode;
@@ -15,6 +17,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
+  const { isOpen: isCommandPaletteOpen, setIsOpen: setCommandPaletteOpen } = useCommandPalette();
 
   const handleNavigate = (path: string) => {
     router.push(path);
@@ -99,6 +102,9 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
 
       {/* Mobile Bottom Navigation */}
       <MobileBottomNav />
+
+      {/* Command Palette */}
+      <CommandPalette isOpen={isCommandPaletteOpen} onClose={() => setCommandPaletteOpen(false)} />
     </div>
   );
 };

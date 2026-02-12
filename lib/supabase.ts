@@ -302,6 +302,11 @@ export async function fetchAutomationRules() {
     .order('created_at', { ascending: false });
 
   if (error) {
+    // Silently return empty array if table doesn't exist yet
+    // (automation system not fully implemented - Phase 2)
+    if (error.code === 'PGRST116' || error.message?.includes('does not exist')) {
+      return [];
+    }
     console.error('Error fetching automation rules:', error);
     return [];
   }
@@ -322,6 +327,11 @@ export async function fetchAutomationLogs() {
     .order('executed_at', { ascending: false });
 
   if (error) {
+    // Silently return empty array if table doesn't exist yet
+    // (automation system not fully implemented - Phase 2)
+    if (error.code === 'PGRST116' || error.message?.includes('does not exist')) {
+      return [];
+    }
     console.error('Error fetching automation logs:', error);
     return [];
   }

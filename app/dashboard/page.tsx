@@ -3,6 +3,7 @@ import { supabase } from '@/lib/supabase';
 import { StatsCard } from '@/components/dashboard/StatsCards';
 import { LeadsChart } from '@/components/dashboard/LeadsChart';
 import { RecentLeads } from '@/components/dashboard/RecentLeads';
+import EnhancedFollowUpWidget from '@/components/dashboard/EnhancedFollowUpWidget';
 
 // Server Component - data fetching happens on server
 export const revalidate = 60; // Revalidate every 60 seconds
@@ -105,16 +106,17 @@ export default async function DashboardPage() {
         />
       </div>
 
-      {/* Charts and Recent Leads Grid */}
+      {/* Main Dashboard Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Chart - takes 2 columns */}
-        <div className="lg:col-span-2">
+        {/* Left column - Charts and Recent (2/3) */}
+        <div className="lg:col-span-2 space-y-6">
           <LeadsChart data={chartData} />
+          <RecentLeads leads={recentLeads} />
         </div>
 
-        {/* Recent Leads - takes 1 column */}
+        {/* Right column - Follow-up Widget (1/3) */}
         <div className="lg:col-span-1">
-          <RecentLeads leads={recentLeads} />
+          <EnhancedFollowUpWidget />
         </div>
       </div>
     </div>

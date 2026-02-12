@@ -1,124 +1,221 @@
-import { useState, useEffect } from 'react';
-import { Bell, Calendar, MailOpen, AlertTriangle, Check, Clock } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { fetchDueLeads, Lead } from '../../lib/supabase';
-import { formatDate } from '../../lib/utils';
+"use client";
 
-const NotificationCenter: React.FC = () => {
+import { useState, useEffect, useRef } from 'react';
+import { Bell } from 'lucide-react';
+import { supabase } from '@/lib/supabase';
+import Link from 'next/link';
+
+interface Notification {
+    id: string;
+    type: 'follow_up' | 'new_lead' | 'hot_lead' | 'no_response';
+    title: string;
+    message: string;
+    leadId?: string;
+    leadName?: string;
+    timestamp: Date;
+    read: boolean;
+}
+
+export default function NotificationCenter() {
+    const [notifications, setNotifications] = useState<Notification[]>([]);
     const [isOpen, setIsOpen] = useState(false);
-    const [notifications, setNotifications] = useState<any[]>([]);
     const [unreadCount, setUnreadCount] = useState(0);
+    const dropdownRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
-        const loadNotifications = async () => {
-            // 1. Get real due leads
-            const dueLeads = await fetchDueLeads();
+        fetchNotifications();
 
-            // 2. Mock some other intelligent alerts
-            const mockAlerts = [
-                { id: 'sys-1', type: 'inactivity', title: 'Lead freddo', message: 'Nessun contatto con Luigi Bianchi da 7 giorni.', time: '2 ore fa', read: false },
-                { id: 'sys-2', type: 'opened', title: 'Email aperta', message: 'Mario Rossi ha visualizzato il preventivo.', time: '10 min fa', read: false }
-            ];
+        // Close dropdown when clicking outside
+        function handleClickOutside(event: MouseEvent) {
+            if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+                setIsOpen(false);
+            }
+        }
 
-            // Combine
-            const followUpNotifs = dueLeads.map(l => ({
-                id: `lead-${l.id}`,
-                type: 'followup',
-                title: 'Follow-up Richiesto',
-                message: `Contatta ${l.nome} (${l.lead_quality}) oggi.`,
-                time: 'Oggi',
-                read: false,
-                link: `/dashboard/leads/${l.id}`
-            }));
-
-            const all = [...mockAlerts, ...followUpNotifs];
-            setNotifications(all);
-            setUnreadCount(all.filter(n => !n.read).length);
-        };
-
-        loadNotifications();
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
 
-    const markAsRead = (id: string) => {
-        setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
-        setUnreadCount(prev => Math.max(0, prev - 1));
+    async function fetchNotifications() {
+        const today = new Date();
+        const todayStr = today.toISOString().split('T')[0];
+        const sevenDaysAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
+
+        // Fetch leads for follow-up today
+        const { data: followUpLeads } = await supabase
+            .from('leads')
+            .select('*')
+            .is('deleted_at', null)
+            .lte('next_follow_up_date', todayStr)
+            .limit(5);
+
+        // Fetch leads with no activity in 7 days
+        const { data: inactiveLeads } = await supabase
+            .from('leads')
+            .select('id, nome, last_contact_date')
+            .is('deleted_at', null)
+            .lt('last_contact_date', sevenDaysAgo.toISOString())
+            .limit(3);
+
+        // Fetch HOT leads from today
+        const { data: hotLeads } = await supabase
+            .from('leads')
+            .select('*')
+            .is('deleted_at', null)
+            .eq('lead_quality', 'HOT')
+            .gte('created_at', todayStr)
+            .limit(3);
+
+        const notifs: Notification[] = [];
+
+        // Follow-up notifications
+        followUpLeads?.forEach(lead => {
+            const isOverdue = lead.next_follow_up_date < todayStr;
+            notifs.push({
+                id: `followup-${lead.id}`,
+                type: 'follow_up',
+                title: isOverdue ? 'Follow-up scaduto' : 'Follow-up oggi',
+                message: `${lead.nome} - da contattare`,
+                leadId: lead.id,
+                leadName: lead.nome,
+                timestamp: new Date(lead.next_follow_up_date),
+                read: false,
+            });
+        });
+
+        // Inactive leads
+        inactiveLeads?.forEach(lead => {
+            notifs.push({
+                id: `inactive-${lead.id}`,
+                type: 'no_response',
+                title: 'Lead inattivo',
+                message: `${lead.nome} non risponde da 7 giorni`,
+                leadId: lead.id,
+                leadName: lead.nome,
+                timestamp: new Date(lead.last_contact_date || lead.created_at),
+                read: false,
+            });
+        });
+
+        // HOT leads
+        hotLeads?.forEach(lead => {
+            notifs.push({
+                id: `hot-${lead.id}`,
+                type: 'hot_lead',
+                title: 'Nuovo Lead HOT!',
+                message: `${lead.nome} - Punteggio: ${lead.punteggio}`,
+                leadId: lead.id,
+                leadName: lead.nome,
+                timestamp: new Date(lead.created_at),
+                read: false,
+            });
+        });
+
+        // Sort by timestamp (most recent first)
+        notifs.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
+
+        setNotifications(notifs);
+        setUnreadCount(notifs.filter(n => !n.read).length);
+    }
+
+    const getNotificationIcon = (type: Notification['type']) => {
+        switch (type) {
+            case 'follow_up':
+                return '📅';
+            case 'new_lead':
+                return '🆕';
+            case 'hot_lead':
+                return '🔥';
+            case 'no_response':
+                return '⚠️';
+            default:
+                return '🔔';
+        }
     };
 
-    const getIcon = (type: string) => {
+    const getNotificationColor = (type: Notification['type']) => {
         switch (type) {
-            case 'followup': return <Calendar size={16} className="text-blue-500" />;
-            case 'inactivity': return <Clock size={16} className="text-orange-500" />;
-            case 'opened': return <MailOpen size={16} className="text-green-500" />;
-            default: return <Bell size={16} className="text-gray-500" />;
+            case 'follow_up':
+                return 'bg-blue-50 border-blue-200';
+            case 'new_lead':
+                return 'bg-purple-50 border-purple-200';
+            case 'hot_lead':
+                return 'bg-red-50 border-red-200';
+            case 'no_response':
+                return 'bg-orange-50 border-orange-200';
+            default:
+                return 'bg-gray-50 border-gray-200';
         }
     };
 
     return (
-        <div className="relative">
+        <div className="relative" ref={dropdownRef}>
+            {/* Bell Icon */}
             <button
                 onClick={() => setIsOpen(!isOpen)}
-                className="relative p-2 text-gray-600 hover:bg-white/50 rounded-full transition-colors"
+                className="relative p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
             >
-                <Bell size={20} />
+                <Bell className="w-5 h-5" />
                 {unreadCount > 0 && (
-                    <span className="absolute top-1 right-1 h-2.5 w-2.5 bg-red-500 rounded-full border-2 border-white animate-pulse"></span>
+                    <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center">
+                        {unreadCount > 9 ? '9+' : unreadCount}
+                    </span>
                 )}
             </button>
 
-            <AnimatePresence>
-                {isOpen && (
-                    <>
-                        <div className="fixed inset-0 z-40" onClick={() => setIsOpen(false)} />
-                        <motion.div
-                            initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                            animate={{ opacity: 1, y: 0, scale: 1 }}
-                            exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                            className="absolute right-0 mt-2 w-80 bg-white/90 backdrop-blur-xl border border-white/50 shadow-xl rounded-2xl z-50 overflow-hidden"
-                        >
-                            <div className="px-4 py-3 border-b border-gray-100 flex justify-between items-center">
-                                <h3 className="font-semibold text-gray-800 text-sm">Notifiche</h3>
-                                <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full font-bold">{unreadCount} Nuove</span>
-                            </div>
+            {/* Dropdown */}
+            {isOpen && (
+                <div className="absolute right-0 mt-2 w-96 bg-white rounded-lg shadow-xl border border-gray-200 z-50">
+                    {/* Header */}
+                    <div className="px-4 py-3 border-b border-gray-200">
+                        <div className="flex items-center justify-between">
+                            <h3 className="font-semibold text-gray-900">Notifiche</h3>
+                            <span className="text-sm text-gray-500">{unreadCount} non lette</span>
+                        </div>
+                    </div>
 
-                            <div className="max-h-[300px] overflow-y-auto">
-                                {notifications.length === 0 ? (
-                                    <div className="p-4 text-center text-gray-500 text-sm">Nessuna notifica</div>
-                                ) : (
-                                    <div className="divide-y divide-gray-50">
-                                        {notifications.map((notif) => (
-                                            <div
-                                                key={notif.id}
-                                                className={`p-3 hover:bg-blue-50/50 transition-colors flex gap-3 ${notif.read ? 'opacity-60' : ''}`}
-                                                onClick={() => markAsRead(notif.id)}
-                                            >
-                                                <div className={`mt-1 h-8 w-8 rounded-full flex items-center justify-center bg-white border border-gray-100 shadow-sm flex-shrink-0`}>
-                                                    {getIcon(notif.type)}
-                                                </div>
-                                                <div className="flex-1">
-                                                    <div className="flex justify-between items-start">
-                                                        <p className="text-sm font-semibold text-gray-800">{notif.title}</p>
-                                                        <span className="text-[10px] text-gray-400">{notif.time}</span>
-                                                    </div>
-                                                    <p className="text-xs text-gray-600 mt-0.5 leading-relaxed">{notif.message}</p>
-                                                </div>
-                                                {!notif.read && (
-                                                    <div className="w-1.5 h-1.5 bg-blue-500 rounded-full mt-2"></div>
-                                                )}
-                                            </div>
-                                        ))}
+                    {/* Notifications List */}
+                    <div className="max-h-96 overflow-y-auto">
+                        {notifications.length === 0 ? (
+                            <div className="px-4 py-8 text-center text-gray-500">
+                                <Bell className="w-12 h-12 text-gray-300 mx-auto mb-2" />
+                                <p className="text-sm">Nessuna notifica</p>
+                            </div>
+                        ) : (
+                            notifications.map((notif) => (
+                                <Link
+                                    key={notif.id}
+                                    href={notif.leadId ? `/dashboard/leads/${notif.leadId}` : '#'}
+                                    className={`block px-4 py-3 border-b border-gray-100 hover:bg-gray-50 transition-colors ${!notif.read ? 'bg-blue-50/30' : ''
+                                        }`}
+                                    onClick={() => setIsOpen(false)}
+                                >
+                                    <div className={`flex items-start gap-3 p-2 rounded-lg border ${getNotificationColor(notif.type)}`}>
+                                        <div className="text-2xl">{getNotificationIcon(notif.type)}</div>
+                                        <div className="flex-1 min-w-0">
+                                            <p className="text-sm font-medium text-gray-900">{notif.title}</p>
+                                            <p className="text-sm text-gray-600">{notif.message}</p>
+                                            <p className="text-xs text-gray-400 mt-1">
+                                                {notif.timestamp.toLocaleDateString('it-IT')}
+                                            </p>
+                                        </div>
                                     </div>
-                                )}
-                            </div>
+                                </Link>
+                            ))
+                        )}
+                    </div>
 
-                            <div className="p-2 border-t border-gray-100 bg-gray-50/50 text-center">
-                                <button className="text-xs text-blue-600 font-medium hover:underline">Segna tutte come lette</button>
-                            </div>
-                        </motion.div>
-                    </>
-                )}
-            </AnimatePresence>
+                    {/* Footer */}
+                    <div className="px-4 py-3 border-t border-gray-200 bg-gray-50">
+                        <button
+                            onClick={() => fetchNotifications()}
+                            className="text-sm text-blue-600 hover:text-blue-700 font-medium"
+                        >
+                            Aggiorna
+                        </button>
+                    </div>
+                </div>
+            )}
         </div>
     );
-};
-
-export default NotificationCenter;
+}

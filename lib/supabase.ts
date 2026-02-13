@@ -103,14 +103,12 @@ export type Template = {
   created_at: string;
   updated_at: string;
   name: string;
-  type: 'email' | 'whatsapp' | 'sms';
-  category: string;
+  type: 'email' | 'whatsapp' | 'sms' | 'call_script';
+  category?: string;
   subject?: string;
   body: string;
   variables: string[];
   times_used: number;
-  avg_open_rate?: number;
-  avg_response_rate?: number;
   active: boolean;
   created_by: string;
 };
@@ -547,6 +545,75 @@ export async function createNotification(notification: Partial<Notification>) {
 
   if (error) {
     console.error('Error creating notification:', error);
+    throw error;
+  }
+}
+
+// ============================================
+// TEMPLATES
+// ============================================
+
+export async function fetchTemplates() {
+  const { data, error } = await supabase
+    .from('templates')
+    .select('*')
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    if (error.code === 'PGRST116' || error.message?.includes('does not exist')) {
+      return [];
+    }
+    console.error('Error fetching templates:', error);
+    return [];
+  }
+  return data as Template[];
+}
+
+export async function createTemplate(template: Partial<Template>) {
+  // Ensure default values
+  const newTemplate = {
+    ...template,
+    active: template.active !== undefined ? template.active : true,
+    times_used: 0,
+    variables: template.variables || []
+  };
+
+  const { data, error } = await supabase
+    .from('templates')
+    .insert([newTemplate])
+    .select()
+    .single();
+
+  if (error) {
+    console.error('Error creating template:', error);
+    throw error;
+  }
+  return data as Template;
+}
+
+export async function updateTemplate(id: string, updates: Partial<Template>) {
+  const { data, error } = await supabase
+    .from('templates')
+    .update(updates)
+    .eq('id', id)
+    .select()
+    .single();
+
+  if (error) {
+    console.error('Error updating template:', error);
+    throw error;
+  }
+  return data as Template;
+}
+
+export async function deleteTemplate(id: string) {
+  const { error } = await supabase
+    .from('templates')
+    .delete()
+    .eq('id', id);
+
+  if (error) {
+    console.error('Error deleting template:', error);
     throw error;
   }
 }

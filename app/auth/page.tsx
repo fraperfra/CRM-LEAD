@@ -26,14 +26,18 @@ export default function AuthPage() {
         setMessage(null)
 
         try {
+            console.log('Starting auth process...', view);
             // supabase client is already initialized above
 
             let error;
 
             if (view === 'sign-in') {
-                const { error: signInError } = await supabase.auth.signInWithPassword({ email, password })
+                console.log('Attempting sign-in...');
+                const { data, error: signInError } = await supabase.auth.signInWithPassword({ email, password })
+                console.log('Sign-in result:', { data, error: signInError });
                 error = signInError;
             } else {
+                console.log('Attempting sign-up...');
                 const { error: signUpError } = await supabase.auth.signUp({
                     email,
                     password,
@@ -45,18 +49,25 @@ export default function AuthPage() {
             }
 
             if (error) {
+                console.error('Auth error:', error);
                 setMessage({ text: error.message, type: 'error' })
             } else {
                 if (view === 'sign-up') {
                     setMessage({ text: 'Registrazione completata! Controlla la tua email per confermare, oppure prova ad accedere.', type: 'success' })
                     setView('sign-in')
                 } else {
+                    console.log('Login successful, redirecting...');
                     setMessage({ text: 'Login effettuato! Reindirizzamento...', type: 'success' })
-                    router.refresh()
-                    router.replace('/dashboard')
+
+                    // Force a hard refresh to ensure cookies are sent to server
+                    console.log('Forcing window.location.href reload to /dashboard');
+                    window.location.href = '/dashboard';
+                    // router.refresh() 
+                    // router.replace('/dashboard')
                 }
             }
         } catch (err: any) {
+            console.error('Unexpected error:', err);
             setMessage({ text: err.message || 'Errore sconosciuto', type: 'error' })
         } finally {
             setLoading(false)

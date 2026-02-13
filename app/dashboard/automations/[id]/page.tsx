@@ -86,17 +86,17 @@ export default function AutomationEditorPage() {
         name: automation.name,
         description: automation.description,
         trigger_type: automation.trigger_type,
-        trigger_conditions: automation.trigger_conditions,
-        steps: automation.steps,
+        trigger_conditions: automation.trigger_conditions || {},
+        steps: automation.steps || [],
         updated_at: new Date().toISOString()
       })
       .eq('id', id)
 
     if (error) {
-      alert('Errore nel salvataggio')
+      alert('Errore nel salvataggio: ' + error.message)
       console.error(error)
     } else {
-      // Optional: show toast
+      alert('Salvataggio completato con successo!')
     }
     setSaving(false)
   }
@@ -225,9 +225,9 @@ export default function AutomationEditorPage() {
                 <div className="flex justify-between items-start mb-4 border-b pb-3">
                   <div className="flex items-center gap-3">
                     <div className={`p-2 rounded-lg ${step.type === 'delay' ? 'bg-amber-100 text-amber-600' :
-                        step.type === 'email' ? 'bg-blue-100 text-blue-600' :
-                          step.type === 'whatsapp' ? 'bg-green-100 text-green-600' :
-                            'bg-purple-100 text-purple-600'
+                      step.type === 'email' ? 'bg-blue-100 text-blue-600' :
+                        step.type === 'whatsapp' ? 'bg-green-100 text-green-600' :
+                          'bg-purple-100 text-purple-600'
                       }`}>
                       {step.type === 'delay' && <Clock className="w-5 h-5" />}
                       {step.type === 'email' && <Mail className="w-5 h-5" />}

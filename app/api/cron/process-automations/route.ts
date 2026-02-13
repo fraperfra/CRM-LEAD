@@ -67,10 +67,11 @@ export async function GET() {
             name
         ),
         leads (
+            id,
+            nome,
             email,
-            phone,
-            first_name,
-            last_name
+            telefono,
+            assigned_to
         )
       `)
             .eq('status', 'active')
@@ -126,13 +127,13 @@ export async function GET() {
 
                         case 'whatsapp':
                             // Send WhatsApp Logic (MANUAL TRIGGER)
-                            console.log(`Creating manual WA task for ${lead.phone}`);
+                            console.log(`Creating manual WA task for ${lead.telefono}`);
 
                             // 1. Create a Task for the agent
                             await supabaseAdmin.from('tasks').insert({
                                 lead_id: enrollment.lead_id,
                                 title: `💬 Invia WhatsApp: ${currentStep.config?.template_id ? 'Template Selezionato' : 'Messaggio Manuale'}`,
-                                description: `Automazione "${sequence.name}": È richiesto un tuo intervento per inviare un messaggio WhatsApp a ${lead.first_name} ${lead.last_name}.`,
+                                description: `Automazione "${sequence.name}": È richiesto un tuo intervento per inviare un messaggio WhatsApp a ${lead.nome}.`,
                                 due_date: new Date().toISOString(), // Due now
                                 completed: false,
                                 assigned_to: lead.assigned_to // Ensure lead has assigned_to or handle null
@@ -145,7 +146,7 @@ export async function GET() {
                                     lead_id: lead.id,
                                     type: 'task', // notification type
                                     title: '💬 Azione Richiesta: WhatsApp',
-                                    message: `L'automazione richiede di inviare un messaggio a ${lead.first_name}. Clicca per eseguire.`,
+                                    message: `L'automazione richiede di inviare un messaggio a ${lead.nome}. Clicca per eseguire.`,
                                     read: false
                                 });
                             }

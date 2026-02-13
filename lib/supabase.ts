@@ -509,7 +509,7 @@ export type Notification = {
   id: string;
   user_id?: string;
   lead_id?: string;
-  type: 'follow_up' | 'new_lead' | 'hot_lead' | 'no_response' | 'assign_lead' | 'system';
+  type: 'follow_up' | 'new_lead' | 'hot_lead' | 'no_response' | 'assign_lead' | 'system' | 'task';
   title: string;
   message: string;
   read: boolean;

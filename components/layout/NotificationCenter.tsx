@@ -77,6 +77,8 @@ export default function NotificationCenter() {
                 return '🔥';
             case 'no_response':
                 return '⚠️';
+            case 'task':
+                return '✅';
             default:
                 return '🔔';
         }
@@ -92,6 +94,8 @@ export default function NotificationCenter() {
                 return 'bg-red-50 border-red-200';
             case 'no_response':
                 return 'bg-orange-50 border-orange-200';
+            case 'task':
+                return 'bg-green-50 border-green-200';
             default:
                 return 'bg-gray-50 border-gray-200';
         }

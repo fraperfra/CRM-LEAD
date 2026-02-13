@@ -125,14 +125,38 @@ export async function GET() {
                             break;
 
                         case 'whatsapp':
-                            // Send WhatsApp Logic
-                            console.log(`Sending WA to ${lead?.phone}`);
-                            // await sendWhatsApp(...)
+                            // Send WhatsApp Logic (MANUAL TRIGGER)
+                            console.log(`Creating manual WA task for ${lead.phone}`);
+
+                            // 1. Create a Task for the agent
+                            await supabaseAdmin.from('tasks').insert({
+                                lead_id: enrollment.lead_id,
+                                title: `💬 Invia WhatsApp: ${currentStep.config?.template_id ? 'Template Selezionato' : 'Messaggio Manuale'}`,
+                                description: `Automazione "${sequence.name}": È richiesto un tuo intervento per inviare un messaggio WhatsApp a ${lead.first_name} ${lead.last_name}.`,
+                                due_date: new Date().toISOString(), // Due now
+                                completed: false,
+                                assigned_to: lead.assigned_to // Ensure lead has assigned_to or handle null
+                            });
+
+                            // 2. Create a Notification
+                            if (lead.assigned_to) {
+                                await supabaseAdmin.from('notifications').insert({
+                                    user_id: lead.assigned_to,
+                                    lead_id: lead.id,
+                                    type: 'task', // notification type
+                                    title: '💬 Azione Richiesta: WhatsApp',
+                                    message: `L'automazione richiede di inviare un messaggio a ${lead.first_name}. Clicca per eseguire.`,
+                                    read: false
+                                });
+                            }
+
+                            // 3. Log Activity (as 'pending' or similar, or just 'system_note')
                             await supabaseAdmin.from('activities').insert({
                                 lead_id: enrollment.lead_id,
-                                type: 'call', // or whatsapp type if exists
-                                description: `Automazione: Inviato WhatsApp (Step ${currentIndex + 1})`
+                                type: 'note',
+                                description: `Automazione: Generato task per invio WhatsApp manuale (Step ${currentIndex + 1})`
                             });
+
                             nextIndex++;
                             break;
 

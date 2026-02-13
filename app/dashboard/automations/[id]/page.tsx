@@ -272,7 +272,7 @@ export default function AutomationEditorPage() {
                       >
                         <option value="">-- Seleziona un template --</option>
                         {templates
-                          .filter(t => t.type === step.type)
+                          .filter(t => t.type === step.type && t.active !== false)
                           .map(t => (
                             <option key={t.id} value={t.id}>{t.name}</option>
                           ))

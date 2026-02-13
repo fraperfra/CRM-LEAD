@@ -143,7 +143,7 @@ export async function POST(request: NextRequest) {
                                     telefono: formData.telefono,
                                     status: 'nuovo',
                                     lead_quality: quality,
-                                    fonte: 'form_gmail',
+                                    source: 'form_gmail',
                                     tipologia: formData.tipologia || 'vendita',
                                     valutazione_stimata: formData.valutazione_stimata,
                                     note: formData.messaggio,

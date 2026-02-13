@@ -98,6 +98,17 @@ export type AutomationSequence = {
   created_by: string;
 };
 
+export type Enrollment = {
+  id: string;
+  lead_id: string;
+  automation_id: string;
+  enrolled_at: string;
+  current_step: number;
+  completed_at?: string;
+  status: 'active' | 'paused' | 'completed' | 'cancelled';
+  next_action_at?: string;
+};
+
 export type Template = {
   id: string;
   created_at: string;
@@ -109,6 +120,8 @@ export type Template = {
   body: string;
   variables: string[];
   times_used: number;
+  avg_open_rate?: number;
+  avg_response_rate?: number;
   active: boolean;
   created_by: string;
 };

@@ -151,6 +151,16 @@ export type Note = {
   created_by: string;
 };
 
+export type SavedFilter = {
+  id: string;
+  created_at: string;
+  name: string;
+  description?: string;
+  filters: any;
+  is_default: boolean;
+  created_by: string;
+};
+
 export type DashboardStats = {
   total_leads: number;
   hot_leads: number;
@@ -619,14 +629,99 @@ export async function updateTemplate(id: string, updates: Partial<Template>) {
   return data as Template;
 }
 
-export async function deleteTemplate(id: string) {
+if (error) {
+  console.error('Error deleting template:', error);
+  throw error;
+}
+}
+
+// ============================================
+// DOCUMENTS
+// ============================================
+
+export async function fetchDocuments(leadId: string) {
+  const { data, error } = await supabase
+    .from('documents')
+    .select('*')
+    .eq('lead_id', leadId)
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    if (error.code === 'PGRST116' || error.message?.includes('does not exist')) return [];
+    console.error('Error fetching documents:', error);
+    return [];
+  }
+  return data as Document[];
+}
+
+export async function createDocument(doc: Partial<Document>) {
+  const { data, error } = await supabase
+    .from('documents')
+    .insert([doc])
+    .select()
+    .single();
+
+  if (error) {
+    console.error('Error creating document:', error);
+    throw error;
+  }
+  return data as Document;
+}
+
+// ============================================
+// NOTES
+// ============================================
+
+export async function fetchNotes(leadId: string) {
+  const { data, error } = await supabase
+    .from('notes')
+    .select('*')
+    .eq('lead_id', leadId)
+    .order('is_pinned', { ascending: false })
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    if (error.code === 'PGRST116' || error.message?.includes('does not exist')) return [];
+    console.error('Error fetching notes:', error);
+    return [];
+  }
+  return data as Note[];
+}
+
+export async function createNote(note: Partial<Note>) {
+  const { data, error } = await supabase
+    .from('notes')
+    .insert([note])
+    .select()
+    .single();
+
+  if (error) {
+    console.error('Error creating note:', error);
+    throw error;
+  }
+  return data as Note;
+}
+
+export async function deleteNote(id: string) {
   const { error } = await supabase
-    .from('templates')
+    .from('notes')
     .delete()
     .eq('id', id);
 
   if (error) {
-    console.error('Error deleting template:', error);
+    console.error('Error deleting note:', error);
+    throw error;
+  }
+}
+
+export async function togglePinNote(id: string, isPinned: boolean) {
+  const { error } = await supabase
+    .from('notes')
+    .update({ is_pinned: isPinned })
+    .eq('id', id);
+
+  if (error) {
+    console.error('Error pinning note:', error);
     throw error;
   }
 }

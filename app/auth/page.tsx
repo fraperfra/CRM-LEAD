@@ -1,17 +1,14 @@
-'use client'
-
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { createClient } from '@supabase/supabase-js'
+import { createBrowserClient } from '@supabase/auth-helpers-nextjs'
 import { Loader2, Mail, Lock, ArrowRight, ShieldCheck } from 'lucide-react'
 
-// Create a single supabase client for interacting with your database
-const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-)
-
 export default function AuthPage() {
+    // Create a supabase client for interacting with your database
+    const supabase = createBrowserClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    )
     const [email, setEmail] = useState('')
     const [password, setPassword] = useState('')
     const [view, setView] = useState<'sign-in' | 'sign-up'>('sign-in')

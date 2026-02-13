@@ -11,9 +11,27 @@ export function LeadDetail({ lead }: LeadDetailProps) {
         <div className="space-y-6">
             {/* Contact Information */}
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                    Informazioni di Contatto
-                </h3>
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
+                    <h3 className="text-lg font-semibold text-gray-900">
+                        Informazioni di Contatto
+                    </h3>
+
+                    {/* Urgency Badge for Motivation */}
+                    <div className="flex items-center gap-2">
+                        <span className="text-sm text-gray-500">Motivazione:</span>
+                        <span
+                            className={`px-3 py-1 rounded-full text-sm font-bold border ${lead.motivazione?.toLowerCase().includes('vendere ora')
+                                    ? 'bg-red-100 text-red-700 border-red-200 shadow-sm animate-pulse'
+                                    : lead.motivazione?.toLowerCase().includes('6 mesi')
+                                        ? 'bg-orange-100 text-orange-700 border-orange-200'
+                                        : 'bg-blue-50 text-blue-700 border-blue-100'
+                                }`}
+                        >
+                            {lead.motivazione || 'Non specificata'}
+                        </span>
+                    </div>
+                </div>
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="flex items-start gap-3">
                         <Mail className="w-5 h-5 text-gray-400 mt-0.5" />
@@ -172,30 +190,23 @@ export function LeadDetail({ lead }: LeadDetailProps) {
                 )}
             </div>
 
-            {/* Motivation & Source */}
+            {/* Source */}
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
                 <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                    Motivazione e Origine
+                    Origine Contatto
                 </h3>
-                <div className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                        <p className="text-sm font-medium text-gray-500 mb-1">Motivazione</p>
-                        <p className="text-gray-900">{lead.motivazione}</p>
+                        <p className="text-sm font-medium text-gray-500">Fonte</p>
+                        <p className="text-gray-900 font-medium">{lead.source}</p>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {lead.utm_source && (
                         <div>
-                            <p className="text-sm font-medium text-gray-500">Fonte</p>
-                            <p className="text-gray-900">{lead.source}</p>
+                            <p className="text-sm font-medium text-gray-500">UTM Source</p>
+                            <p className="text-gray-900 font-medium">{lead.utm_source}</p>
                         </div>
-
-                        {lead.utm_source && (
-                            <div>
-                                <p className="text-sm font-medium text-gray-500">UTM Source</p>
-                                <p className="text-gray-900">{lead.utm_source}</p>
-                            </div>
-                        )}
-                    </div>
+                    )}
                 </div>
             </div>
 

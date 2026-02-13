@@ -4,6 +4,10 @@ import type { NextRequest } from 'next/server'
 
 export async function middleware(req: NextRequest) {
     const res = NextResponse.next()
+    const pathname = req.nextUrl.pathname
+
+    console.log(`[Middleware] Processing request for: ${pathname}`)
+    console.log(`[Middleware] Cookies present: ${req.cookies.getAll().map(c => c.name).join(', ')}`)
 
     const supabase = createServerClient(
         process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -42,17 +46,25 @@ export async function middleware(req: NextRequest) {
     )
 
     // Refresh session if expired - required for Server Components
-    const { data: { session } } = await supabase.auth.getSession()
+    const { data: { session }, error } = await supabase.auth.getSession()
 
-    const isDashboard = req.nextUrl.pathname.startsWith('/dashboard')
-    const isAuthPage = req.nextUrl.pathname.startsWith('/auth')
+    console.log(`[Middleware] Session check result:`, {
+        hasSession: !!session,
+        user: session?.user?.email,
+        error: error?.message
+    })
+
+    const isDashboard = pathname.startsWith('/dashboard')
+    const isAuthPage = pathname.startsWith('/auth')
 
     if (isDashboard && !session) {
+        console.log('[Middleware] No session for dashboard, redirecting to /auth')
         // Redirect to login if trying to access dashboard without valid session
         return NextResponse.redirect(new URL('/auth', req.url))
     }
 
     if (isAuthPage && session) {
+        console.log('[Middleware] Session active on auth page, redirecting to /dashboard')
         // Redirect to dashboard if already logged in
         return NextResponse.redirect(new URL('/dashboard', req.url))
     }

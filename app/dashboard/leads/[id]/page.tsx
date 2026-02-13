@@ -1,5 +1,6 @@
 import { supabase } from '@/lib/supabase';
 import { LeadDetail } from '@/components/leads/LeadDetail';
+import { LeadActions } from '@/components/leads/LeadActions';
 import { ActivityTimeline } from '@/components/leads/ActivityTimeline';
 import { Phone, Mail, MessageSquare, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
@@ -89,31 +90,7 @@ export default async function LeadDetailPage({ params }: PageProps) {
         </div>
 
         {/* Action Buttons */}
-        <div className="flex gap-3 mt-6 pt-6 border-t border-gray-200">
-          <a
-            href={`tel:${lead.telefono}`}
-            className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 font-medium"
-          >
-            <Phone className="w-4 h-4" />
-            Chiama
-          </a>
-          <a
-            href={`mailto:${lead.email}`}
-            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium"
-          >
-            <Mail className="w-4 h-4" />
-            Email
-          </a>
-          <a
-            href={`https://wa.me/${lead.telefono.replace(/\s/g, '')}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium"
-          >
-            <MessageSquare className="w-4 h-4" />
-            WhatsApp
-          </a>
-        </div>
+        <LeadActions lead={lead} />
       </div>
 
       {/* Tabs Content */}

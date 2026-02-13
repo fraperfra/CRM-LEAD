@@ -144,7 +144,6 @@ export function LeadActions({ lead }: LeadActionsProps) {
                                     </button>
                                 ) : (
                                     <button
-                                        onClick={handleProceed} // Could be "Call Now" tel link
                                         className="flex-1 bg-purple-600 text-white py-2 rounded-lg hover:bg-purple-700 flex items-center justify-center gap-2"
                                         onClick={() => window.location.href = `tel:${lead.telefono}`}
                                     >

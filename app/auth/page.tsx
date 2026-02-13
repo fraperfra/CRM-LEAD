@@ -2,8 +2,14 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
+import { createClient } from '@supabase/supabase-js'
 import { Loader2, Mail, Lock, ArrowRight, ShieldCheck } from 'lucide-react'
+
+// Create a single supabase client for interacting with your database
+const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+)
 
 export default function AuthPage() {
     const [email, setEmail] = useState('')
@@ -20,8 +26,7 @@ export default function AuthPage() {
         setMessage(null)
 
         try {
-            // Use Client Component Client to access/set cookies correctly
-            const supabase = createClientComponentClient()
+            // supabase client is already initialized above
 
             let error;
 

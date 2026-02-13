@@ -3,8 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
-import { Loader2, Mail, Lock, User, ArrowRight, ShieldCheck } from 'lucide-react'
-import Image from 'next/image'
+import { Loader2, Mail, Lock, ArrowRight, ShieldCheck } from 'lucide-react'
 
 export default function AuthPage() {
     const [email, setEmail] = useState('')
@@ -65,7 +64,7 @@ export default function AuthPage() {
     return (
         <div className="flex min-h-screen bg-gray-50/50">
             {/* Left Side - Form */}
-            <div className="flex-1 flex flex-col justify-center py-12 px-4 sm:px-6 lg:flex-none lg:px-20 xl:px-24 bg-white shadow-xl relative z-10 w-full lg:w-[480px]">
+            <div className="flex-1 flex flex-col justify-center py-12 px-4 sm:px-6 lg:px-20 xl:px-24 bg-white shadow-xl relative z-10 w-full">
                 <div className="mx-auto w-full max-w-sm lg:w-96">
                     <div className="mb-10">
                         <h1 className="text-3xl font-extrabold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
@@ -165,31 +164,6 @@ export default function AuthPage() {
                             </div>
                         )}
                     </form>
-                </div>
-            </div>
-
-            {/* Right Side - Feature Showcase */}
-            <div className="hidden lg:relative lg:flex lg:flex-1 lg:bg-slate-900 bg-[url('https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&q=80')] bg-cover bg-center">
-                <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/40 to-transparent"></div>
-                <div className="absolute inset-x-0 bottom-0 p-20 text-white z-10">
-                    <h3 className="text-4xl font-bold mb-4">Gestisci la tua Agenzia Immobiliare</h3>
-                    <p className="text-lg text-slate-300 max-w-xl">
-                        Automatizza l'acquisizione lead, gestisci le valutazioni e monitora le performance del tuo team in un unico posto.
-                    </p>
-                    <div className="mt-8 flex gap-6">
-                        <div className="flex items-center gap-2 text-sm text-slate-400">
-                            <div className="w-8 h-8 rounded-full bg-blue-500/20 flex items-center justify-center text-blue-400">
-                                <ShieldCheck className="w-4 h-4" />
-                            </div>
-                            Sicuro & Cifrato
-                        </div>
-                        <div className="flex items-center gap-2 text-sm text-slate-400">
-                            <div className="w-8 h-8 rounded-full bg-blue-500/20 flex items-center justify-center text-blue-400">
-                                <User className="w-4 h-4" />
-                            </div>
-                            Multi-Utente
-                        </div>
-                    </div>
                 </div>
             </div>
         </div>

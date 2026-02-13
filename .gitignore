@@ -32,3 +32,5 @@ out/
 .env.local
 .env.production.local
 .env.development.local
+
+nul

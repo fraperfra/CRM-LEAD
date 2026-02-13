@@ -479,3 +479,74 @@ export async function createAutomationRule(rule: Partial<AutomationRule>) {
   }
   return data as AutomationRule;
 }
+
+// ============================================
+// NOTIFICATIONS
+// ============================================
+
+export type Notification = {
+  id: string;
+  user_id?: string;
+  lead_id?: string;
+  type: 'follow_up' | 'new_lead' | 'hot_lead' | 'no_response' | 'assign_lead' | 'system';
+  title: string;
+  message: string;
+  read: boolean;
+  created_at: string;
+  link?: string;
+  metadata?: any;
+};
+
+export async function fetchNotifications() {
+  const { data, error } = await supabase
+    .from('notifications')
+    .select('*')
+    .order('created_at', { ascending: false })
+    .limit(50); // Fetch last 50 notifications
+
+  if (error) {
+    // Return empty if table doesn't exist yet
+    if (error.code === 'PGRST116' || error.message?.includes('does not exist')) {
+      return [];
+    }
+    console.error('Error fetching notifications:', error);
+    return [];
+  }
+  return data as Notification[];
+}
+
+export async function markNotificationAsRead(id: string) {
+  const { error } = await supabase
+    .from('notifications')
+    .update({ read: true })
+    .eq('id', id);
+
+  if (error) {
+    console.error('Error marking notification as read:', error);
+    throw error;
+  }
+}
+
+export async function markAllNotificationsAsRead() {
+  // Mark all unread notifications for current user (handled by RLS automatically)
+  const { error } = await supabase
+    .from('notifications')
+    .update({ read: true })
+    .eq('read', false);
+
+  if (error) {
+    console.error('Error marking all notifications as read:', error);
+    throw error;
+  }
+}
+
+export async function createNotification(notification: Partial<Notification>) {
+  const { error } = await supabase
+    .from('notifications')
+    .insert([notification]);
+
+  if (error) {
+    console.error('Error creating notification:', error);
+    throw error;
+  }
+}

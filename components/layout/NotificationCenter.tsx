@@ -1,20 +1,9 @@
 "use client";
 
 import { useState, useEffect, useRef } from 'react';
-import { Bell } from 'lucide-react';
-import { supabase } from '@/lib/supabase';
+import { Bell, Check } from 'lucide-react';
+import { supabase, Notification, fetchNotifications, markNotificationAsRead, markAllNotificationsAsRead } from '@/lib/supabase';
 import Link from 'next/link';
-
-interface Notification {
-    id: string;
-    type: 'follow_up' | 'new_lead' | 'hot_lead' | 'no_response';
-    title: string;
-    message: string;
-    leadId?: string;
-    leadName?: string;
-    timestamp: Date;
-    read: boolean;
-}
 
 export default function NotificationCenter() {
     const [notifications, setNotifications] = useState<Notification[]>([]);
@@ -23,9 +12,28 @@ export default function NotificationCenter() {
     const dropdownRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
-        fetchNotifications();
+        loadNotifications();
 
-        // Close dropdown when clicking outside
+        // Realtime Subscription
+        const subscription = supabase
+            .channel('notifications_channel')
+            .on(
+                'postgres_changes',
+                {
+                    event: 'INSERT',
+                    schema: 'public',
+                    table: 'notifications',
+                },
+                (payload) => {
+                    const newNotif = payload.new as Notification;
+                    setNotifications(prev => [newNotif, ...prev]);
+                    setUnreadCount(prev => prev + 1);
+                    // Optional: Play sound or show toast
+                }
+            )
+            .subscribe();
+
+        // Close dropdown details
         function handleClickOutside(event: MouseEvent) {
             if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
                 setIsOpen(false);
@@ -33,72 +41,30 @@ export default function NotificationCenter() {
         }
 
         document.addEventListener('mousedown', handleClickOutside);
-        return () => document.removeEventListener('mousedown', handleClickOutside);
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+            supabase.removeChannel(subscription);
+        };
     }, []);
 
-    async function fetchNotifications() {
-        const today = new Date();
-        const todayStr = today.toISOString().split('T')[0];
-        const sevenDaysAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
+    async function loadNotifications() {
+        const data = await fetchNotifications();
+        setNotifications(data);
+        setUnreadCount(data.filter(n => !n.read).length);
+    }
 
-        // Single query: fetch all active leads that could generate notifications
-        const { data: allLeads } = await supabase
-            .from('leads')
-            .select('id, nome, punteggio, lead_quality, status, created_at, next_follow_up_date, last_contact_date')
-            .is('deleted_at', null);
+    async function handleMarkAsRead(id: string, e: React.MouseEvent) {
+        e.preventDefault();
+        e.stopPropagation();
+        await markNotificationAsRead(id);
+        setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
+        setUnreadCount(prev => Math.max(0, prev - 1));
+    }
 
-        const notifs: Notification[] = [];
-
-        allLeads?.forEach(lead => {
-            // Follow-up notifications (due today or overdue)
-            if (lead.next_follow_up_date && lead.next_follow_up_date <= todayStr) {
-                const isOverdue = lead.next_follow_up_date < todayStr;
-                notifs.push({
-                    id: `followup-${lead.id}`,
-                    type: 'follow_up',
-                    title: isOverdue ? 'Follow-up scaduto' : 'Follow-up oggi',
-                    message: `${lead.nome} - da contattare`,
-                    leadId: lead.id,
-                    leadName: lead.nome,
-                    timestamp: new Date(lead.next_follow_up_date),
-                    read: false,
-                });
-            }
-
-            // Inactive leads (no contact in 7 days)
-            if (lead.last_contact_date && lead.last_contact_date < sevenDaysAgo.toISOString()) {
-                notifs.push({
-                    id: `inactive-${lead.id}`,
-                    type: 'no_response',
-                    title: 'Lead inattivo',
-                    message: `${lead.nome} non risponde da 7 giorni`,
-                    leadId: lead.id,
-                    leadName: lead.nome,
-                    timestamp: new Date(lead.last_contact_date),
-                    read: false,
-                });
-            }
-
-            // HOT leads created today
-            if (lead.lead_quality === 'HOT' && lead.created_at >= todayStr) {
-                notifs.push({
-                    id: `hot-${lead.id}`,
-                    type: 'hot_lead',
-                    title: 'Nuovo Lead HOT!',
-                    message: `${lead.nome} - Punteggio: ${lead.punteggio}`,
-                    leadId: lead.id,
-                    leadName: lead.nome,
-                    timestamp: new Date(lead.created_at),
-                    read: false,
-                });
-            }
-        });
-
-        // Sort by timestamp (most recent first)
-        notifs.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
-
-        setNotifications(notifs);
-        setUnreadCount(notifs.filter(n => !n.read).length);
+    async function handleMarkAllRead() {
+        await markAllNotificationsAsRead();
+        setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+        setUnreadCount(0);
     }
 
     const getNotificationIcon = (type: Notification['type']) => {
@@ -137,10 +103,11 @@ export default function NotificationCenter() {
             <button
                 onClick={() => setIsOpen(!isOpen)}
                 className="relative p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+                aria-label="Notifications"
             >
                 <Bell className="w-5 h-5" />
                 {unreadCount > 0 && (
-                    <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center">
+                    <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center animate-pulse-short">
                         {unreadCount > 9 ? '9+' : unreadCount}
                     </span>
                 )}
@@ -148,54 +115,85 @@ export default function NotificationCenter() {
 
             {/* Dropdown */}
             {isOpen && (
-                <div className="absolute right-0 mt-2 w-96 bg-white rounded-lg shadow-xl border border-gray-200 z-50">
+                <div className="absolute right-0 mt-2 w-96 bg-white rounded-lg shadow-xl border border-gray-200 z-50 overflow-hidden">
                     {/* Header */}
-                    <div className="px-4 py-3 border-b border-gray-200">
-                        <div className="flex items-center justify-between">
+                    <div className="px-4 py-3 border-b border-gray-200 bg-gray-50 flex items-center justify-between">
+                        <div>
                             <h3 className="font-semibold text-gray-900">Notifiche</h3>
-                            <span className="text-sm text-gray-500">{unreadCount} non lette</span>
+                            <p className="text-xs text-gray-500">{unreadCount} non lette</p>
                         </div>
+                        {unreadCount > 0 && (
+                            <button
+                                onClick={handleMarkAllRead}
+                                className="text-xs text-blue-600 hover:text-blue-800 font-medium hover:underline"
+                            >
+                                Segna tutte lette
+                            </button>
+                        )}
                     </div>
 
                     {/* Notifications List */}
                     <div className="max-h-96 overflow-y-auto">
                         {notifications.length === 0 ? (
-                            <div className="px-4 py-8 text-center text-gray-500">
-                                <Bell className="w-12 h-12 text-gray-300 mx-auto mb-2" />
+                            <div className="px-4 py-12 text-center text-gray-500">
+                                <Bell className="w-12 h-12 text-gray-200 mx-auto mb-3" />
                                 <p className="text-sm">Nessuna notifica</p>
                             </div>
                         ) : (
-                            notifications.map((notif) => (
-                                <Link
-                                    key={notif.id}
-                                    href={notif.leadId ? `/dashboard/leads/${notif.leadId}` : '#'}
-                                    className={`block px-4 py-3 border-b border-gray-100 hover:bg-gray-50 transition-colors ${!notif.read ? 'bg-blue-50/30' : ''
-                                        }`}
-                                    onClick={() => setIsOpen(false)}
-                                >
-                                    <div className={`flex items-start gap-3 p-2 rounded-lg border ${getNotificationColor(notif.type)}`}>
-                                        <div className="text-2xl">{getNotificationIcon(notif.type)}</div>
-                                        <div className="flex-1 min-w-0">
-                                            <p className="text-sm font-medium text-gray-900">{notif.title}</p>
-                                            <p className="text-sm text-gray-600">{notif.message}</p>
-                                            <p className="text-xs text-gray-400 mt-1">
-                                                {notif.timestamp.toLocaleDateString('it-IT')}
-                                            </p>
-                                        </div>
+                            <div className="divide-y divide-gray-100">
+                                {notifications.map((notif) => (
+                                    <div
+                                        key={notif.id}
+                                        className={`group relative block px-4 py-3 hover:bg-gray-50 transition-colors ${!notif.read ? 'bg-blue-50/20' : ''}`}
+                                    >
+                                        <Link
+                                            href={notif.link || (notif.lead_id ? `/dashboard/leads/${notif.lead_id}` : '#')}
+                                            onClick={() => {
+                                                if (!notif.read) markNotificationAsRead(notif.id);
+                                                setIsOpen(false);
+                                            }}
+                                            className="flex gap-3"
+                                        >
+                                            <div className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center text-lg ${getNotificationColor(notif.type).split(' ')[0]}`}>
+                                                {getNotificationIcon(notif.type)}
+                                            </div>
+                                            <div className="flex-1 min-w-0">
+                                                <div className="flex items-start justify-between">
+                                                    <p className={`text-sm ${!notif.read ? 'font-semibold text-gray-900' : 'font-medium text-gray-700'}`}>
+                                                        {notif.title}
+                                                    </p>
+                                                    <span className="text-xs text-gray-400 whitespace-nowrap ml-2">
+                                                        {new Date(notif.created_at).toLocaleDateString('it-IT')}
+                                                    </span>
+                                                </div>
+                                                <p className="text-sm text-gray-600 mt-0.5 line-clamp-2">{notif.message}</p>
+                                            </div>
+                                        </Link>
+
+                                        {!notif.read && (
+                                            <button
+                                                onClick={(e) => handleMarkAsRead(notif.id, e)}
+                                                className="absolute top-1/2 -translate-y-1/2 right-2 p-1.5 text-gray-400 hover:text-blue-600 bg-white/80 rounded-full opacity-0 group-hover:opacity-100 transition-opacity shadow-sm border border-gray-100"
+                                                title="Segna come letta"
+                                            >
+                                                <Check className="w-4 h-4" />
+                                            </button>
+                                        )}
                                     </div>
-                                </Link>
-                            ))
+                                ))}
+                            </div>
                         )}
                     </div>
 
                     {/* Footer */}
-                    <div className="px-4 py-3 border-t border-gray-200 bg-gray-50">
-                        <button
-                            onClick={() => fetchNotifications()}
-                            className="text-sm text-blue-600 hover:text-blue-700 font-medium"
+                    <div className="px-4 py-2 border-t border-gray-200 bg-gray-50 text-center">
+                        <Link
+                            href="/dashboard/notifications"
+                            className="text-xs text-gray-500 hover:text-gray-900"
+                            onClick={() => setIsOpen(false)}
                         >
-                            Aggiorna
-                        </button>
+                            Vedi tutte le notifiche
+                        </Link>
                     </div>
                 </div>
             )}

@@ -2,7 +2,23 @@
   "permissions": {
     "allow": [
       "Bash(wc:*)",
-      "Bash(npm run build:*)"
+      "Bash(npm run build:*)",
+      "Bash(git add:*)",
+      "Bash(git commit -m \"$\\(cat <<''EOF''\nchore: Prepare Vercel deployment config\n\nAdd cron job for email check and .env.example for reference.\n\nCo-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(git push:*)",
+      "Bash(git commit -m \"$\\(cat <<''EOF''\nfix: Handle missing Supabase env vars during build\n\nUse placeholder values so createClient doesn''t throw at build time\nwhen environment variables aren''t yet configured on Vercel.\n\nCo-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(grep:*)",
+      "Bash(cat:*)",
+      "Bash(find:*)",
+      "Bash(git commit -m \"$\\(cat <<''EOF''\nperf: Optimize bundle size with dynamic imports and query consolidation\n\n- Dynamic import CommandPalette, NotificationCenter, MobileBottomNav in layout\n- Dynamic import chart components \\(Recharts\\) in dashboard and analytics pages\n- Unify 3 separate Supabase queries into 1 in NotificationCenter\n- Add 150ms debounce to useIsMobile resize listener\n- Enable optimizePackageImports for lucide-react and recharts\n- Add Cache-Control immutable headers for static assets\n\nCo-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(npx vercel:*)",
+      "Bash(npx vercel@latest:*)",
+      "Bash(set \"VERCEL_ORG_ID=team_sE3TaXbejvUC3jsM3vIRyWkA\")",
+      "Bash(cmd /c \"cd /d \"\"C:\\\\Users\\\\FRANCESCO COPPOLA\\\\Desktop\\\\CRM FRANCESCO COPPOLA\"\" && npx vercel@latest link --scope fraperfras-projects --yes\")",
+      "Bash(cmd /c \"cd /d \"\"C:\\\\Users\\\\FRANCESCO COPPOLA\\\\Desktop\\\\CRM FRANCESCO COPPOLA\"\" && npx vercel link --scope fraperfras-projects --yes 2>&1\")",
+      "Bash(where:*)",
+      "Bash(npx -y node -e \"let d='''';process.stdin.on\\(''data'',c=>d+=c\\);process.stdin.on\\(''end'',\\(\\)=>{try{const p=JSON.parse\\(d\\);const crm=p.find\\(x=>x.name===''crm''\\);if\\(crm\\)console.log\\(JSON.stringify\\({projectId:crm.id,orgId:crm.accountId}\\)\\);else console.log\\(''not found''\\)}catch\\(e\\){console.log\\(d\\)}}\\)\")",
+      "Bash(if not exist \"C:\\\\Users\\\\FRANCESCO COPPOLA\\\\Desktop\\\\CRM FRANCESCO COPPOLA\\\\.vercel\" mkdir \"C:\\\\Users\\\\FRANCESCO COPPOLA\\\\Desktop\\\\CRM FRANCESCO COPPOLA\\\\.vercel\")"
     ]
   }
 }

@@ -3,7 +3,11 @@
   "crons": [
     {
       "path": "/api/cron/check-emails",
-      "schedule": "*/15 * * * *"
+      "schedule": "0 8 * * *"
+    },
+    {
+      "path": "/api/cron/automations",
+      "schedule": "0 * * * *"
     }
   ]
 }

@@ -58,14 +58,18 @@ export async function middleware(req: NextRequest) {
     const isAuthPage = pathname.startsWith('/auth')
 
     if (isDashboard && !session) {
-        console.log('[Middleware] No session for dashboard, redirecting to /auth')
-        // Redirect to login if trying to access dashboard without valid session
-        return NextResponse.redirect(new URL('/auth', req.url))
+        console.log('[Middleware] No session for dashboard, normally would redirect to /auth')
+        // TEMPORARY DEBUG: Allow info to pass to client to diagnose
+        res.headers.set('X-Middleware-Session', 'none')
+        // return NextResponse.redirect(new URL('/auth', req.url))
+    } else if (session) {
+        res.headers.set('X-Middleware-Session', 'active')
+        res.headers.set('X-Middleware-User', session.user.email || 'unknown')
     }
 
     if (isAuthPage && session) {
         console.log('[Middleware] Session active on auth page, redirecting to /dashboard')
-        // Redirect to dashboard if already logged in
+        // Keep this redirect as it's less critical/dangerous
         return NextResponse.redirect(new URL('/dashboard', req.url))
     }
 

@@ -12,10 +12,13 @@
   "dependencies": {
     "@google-cloud/local-auth": "^3.0.1",
     "@google/generative-ai": "^0.24.1",
+    "@supabase/auth-helpers-nextjs": "^0.15.0",
+    "@supabase/auth-helpers-react": "^0.15.0",
     "@supabase/supabase-js": "^2.95.3",
     "@tanstack/react-table": "^8.21.3",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "cookie": "^1.1.1",
     "date-fns": "^4.1.0",
     "framer-motion": "^12.4.7",
     "googleapis": "^171.4.0",

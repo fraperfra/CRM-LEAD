@@ -1,11 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getGmailService, parse FormEmail, determineLeadQuality } from '@/lib/gmail';
+import { getGmailService, parseFormEmail, determineLeadQuality } from '@/lib/gmail';
 import { supabase } from '@/lib/supabase';
 
 export async function POST(request: NextRequest) {
     try {
-        // Get user ID from auth (TODO: implement proper auth)
-        const userId = 'current-user-id';
+        // Get user ID from auth
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
+        const userId = user.id;
 
         // Create sync log entry
         const { data: syncLog, error: syncLogError } = await supabase
@@ -111,7 +115,7 @@ export async function POST(request: NextRequest) {
                     if (formData.email) {
                         const { data: existingLead } = await supabase
                             .from('leads')
-                            .select('id')
+                            .select('id, nome, telefono')
                             .eq('email', formData.email)
                             .single();
 

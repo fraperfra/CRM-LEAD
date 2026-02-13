@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Mail, RefreshCw, CheckCircle, XCircle, Clock, TrendingUp, Users } from 'lucide-react';
+import { supabase } from '@/lib/supabase';
 
 export default function GmailIntegrationSettings() {
     const [connected, setConnected] = useState(false);
@@ -36,7 +37,18 @@ export default function GmailIntegrationSettings() {
     }
 
     async function handleConnect() {
-        window.location.href = '/api/gmail/auth';
+        try {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (user) {
+                window.location.href = `/api/gmail/auth?userId=${user.id}`;
+            } else {
+                console.error('No user found');
+                window.location.href = '/api/gmail/auth';
+            }
+        } catch (error) {
+            console.error('Auth check error:', error);
+            window.location.href = '/api/gmail/auth';
+        }
     }
 
     async function handleSync() {

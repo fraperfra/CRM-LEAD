@@ -23,12 +23,18 @@ export class GmailService {
     }
 
     // Generate OAuth URL for user authentication
-    getAuthUrl(): string {
-        return this.oauth2Client.generateAuthUrl({
+    getAuthUrl(userId?: string): string {
+        const options: any = {
             access_type: 'offline',
             scope: SCOPES,
             prompt: 'consent', // Force to get refresh token
-        });
+        };
+
+        if (userId) {
+            options.state = userId;
+        }
+
+        return this.oauth2Client.generateAuthUrl(options);
     }
 
     // Exchange authorization code for tokens

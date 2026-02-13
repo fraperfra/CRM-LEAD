@@ -1,4 +1,4 @@
-import GmailIntegrationSettings from '@/components/settings/GmailIntegrationSettings';
+
 
 export default function SettingsPage() {
     return (
@@ -9,7 +9,7 @@ export default function SettingsPage() {
             </div>
 
             {/* Gmail Integration */}
-            <GmailIntegrationSettings />
+            {/* Gmail Integration Removed as per user request */}
 
             {/* Future settings sections */}
             {/* Notification Preferences, User Profile, etc. */}

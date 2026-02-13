@@ -702,6 +702,17 @@ export async function createNote(note: Partial<Note>) {
   return data as Note;
 }
 
+export async function deleteTemplate(id: string) {
+  const { error } = await supabase
+    .from('templates')
+    .delete()
+    .eq('id', id);
+
+  if (error) {
+    console.error('Error deleting template:', error);
+    throw error;
+  }
+}
 export async function deleteNote(id: string) {
   const { error } = await supabase
     .from('notes')

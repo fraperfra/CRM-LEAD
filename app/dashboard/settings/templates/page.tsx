@@ -124,7 +124,14 @@ export default function TemplatesPage() {
                                     </div>
                                     <div>
                                         <h3 className="font-semibold text-gray-900">{template.name}</h3>
-                                        <p className="text-xs text-gray-500 uppercase tracking-wider">{template.type}</p>
+                                        <div className="flex gap-2 text-xs">
+                                            <span className="text-gray-500 uppercase tracking-wider">{template.type}</span>
+                                            {template.category && (
+                                                <span className="bg-gray-100 px-2 py-0.5 rounded text-gray-600">
+                                                    {template.category}
+                                                </span>
+                                            )}
+                                        </div>
                                     </div>
                                 </div>
                                 <div className="flex gap-2">
@@ -183,50 +190,63 @@ export default function TemplatesPage() {
                                         <option value="sms">SMS</option>
                                     </select>
                                 </div>
-                            </div>
-
-                            {formData.type === 'email' && (
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Oggetto</label>
-                                    <input
-                                        type="text"
-                                        className="w-full border rounded-lg p-2"
-                                        value={formData.subject || ''}
-                                        onChange={e => setFormData({ ...formData, subject: e.target.value })}
-                                        placeholder="Oggetto dell'email"
-                                    />
-                                </div>
-                            )}
-
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Testo Messaggio</label>
-                                <p className="text-xs text-gray-500 mb-2">Usa le doppie graffe per le variabili. Esempio: <code>Ciao {'{{nome}}'}</code></p>
-                                <textarea
-                                    className="w-full border rounded-lg p-3 h-40 font-mono text-sm"
-                                    value={formData.body}
-                                    onChange={e => setFormData({ ...formData, body: e.target.value })}
-                                    placeholder="Scrivi qui il tuo messaggio..."
-                                />
-                            </div>
-
-                            <div className="flex justify-end gap-3 pt-4 border-t">
-                                <button
-                                    onClick={() => setIsModalOpen(false)}
-                                    className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg"
-                                >
-                                    Annulla
-                                </button>
-                                <button
-                                    onClick={handleSave}
-                                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-                                >
-                                    Salva Template
-                                </button>
-                            </div>
+                            </select>
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Categoria</label>
+                            <input
+                                type="text"
+                                className="w-full border rounded-lg p-2"
+                                value={formData.category || ''}
+                                onChange={e => setFormData({ ...formData, category: e.target.value })}
+                                placeholder="es. Welcome, Follow-up"
+                            />
                         </div>
                     </div>
+
+                    {formData.type === 'email' && (
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Oggetto</label>
+                            <input
+                                type="text"
+                                className="w-full border rounded-lg p-2"
+                                value={formData.subject || ''}
+                                onChange={e => setFormData({ ...formData, subject: e.target.value })}
+                                placeholder="Oggetto dell'email"
+                            />
+                        </div>
+                    )}
+
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Testo Messaggio</label>
+                        <p className="text-xs text-gray-500 mb-2">Usa le doppie graffe per le variabili. Esempio: <code>Ciao {'{{nome}}'}</code></p>
+                        <textarea
+                            className="w-full border rounded-lg p-3 h-40 font-mono text-sm"
+                            value={formData.body}
+                            onChange={e => setFormData({ ...formData, body: e.target.value })}
+                            placeholder="Scrivi qui il tuo messaggio..."
+                        />
+                    </div>
+
+                    <div className="flex justify-end gap-3 pt-4 border-t">
+                        <button
+                            onClick={() => setIsModalOpen(false)}
+                            className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg"
+                        >
+                            Annulla
+                        </button>
+                        <button
+                            onClick={handleSave}
+                            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                        >
+                            Salva Template
+                        </button>
+                    </div>
                 </div>
-            )}
-        </div>
+                    </div>
+                </div >
+            )
+}
+        </div >
     )
 }

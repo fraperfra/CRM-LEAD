@@ -2,6 +2,7 @@
 
 import { Users, Clock, DollarSign, TrendingUp } from 'lucide-react';
 import { useState, useEffect } from 'react';
+import dynamic from 'next/dynamic';
 import { supabase } from '@/lib/supabase';
 import {
     KPICard,
@@ -12,10 +13,22 @@ import {
     getConversionFunnel,
     getLeadsByPropertyType
 } from '@/components/analytics/KPICard';
-import { ConversionFunnel } from '@/components/analytics/ConversionFunnel';
-import { LeadSourceChart } from '@/components/analytics/LeadSourceChart';
-import { PropertyTypeChart } from '@/components/analytics/PropertyTypeChart';
 import { formatCurrency } from '@/lib/utils';
+
+const ChartSkeleton = () => <div className="h-72 bg-white/70 rounded-2xl animate-pulse" />;
+
+const ConversionFunnel = dynamic(
+    () => import('@/components/analytics/ConversionFunnel').then(m => ({ default: m.ConversionFunnel })),
+    { ssr: false, loading: ChartSkeleton }
+);
+const LeadSourceChart = dynamic(
+    () => import('@/components/analytics/LeadSourceChart').then(m => ({ default: m.LeadSourceChart })),
+    { ssr: false, loading: ChartSkeleton }
+);
+const PropertyTypeChart = dynamic(
+    () => import('@/components/analytics/PropertyTypeChart').then(m => ({ default: m.PropertyTypeChart })),
+    { ssr: false, loading: ChartSkeleton }
+);
 
 export default function AnalyticsPage() {
     const [leads, setLeads] = useState<any[]>([]);

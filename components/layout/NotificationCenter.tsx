@@ -41,74 +41,57 @@ export default function NotificationCenter() {
         const todayStr = today.toISOString().split('T')[0];
         const sevenDaysAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
 
-        // Fetch leads for follow-up today
-        const { data: followUpLeads } = await supabase
+        // Single query: fetch all active leads that could generate notifications
+        const { data: allLeads } = await supabase
             .from('leads')
-            .select('*')
-            .is('deleted_at', null)
-            .lte('next_follow_up_date', todayStr)
-            .limit(5);
-
-        // Fetch leads with no activity in 7 days
-        const { data: inactiveLeads } = await supabase
-            .from('leads')
-            .select('id, nome, last_contact_date')
-            .is('deleted_at', null)
-            .lt('last_contact_date', sevenDaysAgo.toISOString())
-            .limit(3);
-
-        // Fetch HOT leads from today
-        const { data: hotLeads } = await supabase
-            .from('leads')
-            .select('*')
-            .is('deleted_at', null)
-            .eq('lead_quality', 'HOT')
-            .gte('created_at', todayStr)
-            .limit(3);
+            .select('id, nome, punteggio, lead_quality, status, created_at, next_follow_up_date, last_contact_date')
+            .is('deleted_at', null);
 
         const notifs: Notification[] = [];
 
-        // Follow-up notifications
-        followUpLeads?.forEach(lead => {
-            const isOverdue = lead.next_follow_up_date < todayStr;
-            notifs.push({
-                id: `followup-${lead.id}`,
-                type: 'follow_up',
-                title: isOverdue ? 'Follow-up scaduto' : 'Follow-up oggi',
-                message: `${lead.nome} - da contattare`,
-                leadId: lead.id,
-                leadName: lead.nome,
-                timestamp: new Date(lead.next_follow_up_date),
-                read: false,
-            });
-        });
+        allLeads?.forEach(lead => {
+            // Follow-up notifications (due today or overdue)
+            if (lead.next_follow_up_date && lead.next_follow_up_date <= todayStr) {
+                const isOverdue = lead.next_follow_up_date < todayStr;
+                notifs.push({
+                    id: `followup-${lead.id}`,
+                    type: 'follow_up',
+                    title: isOverdue ? 'Follow-up scaduto' : 'Follow-up oggi',
+                    message: `${lead.nome} - da contattare`,
+                    leadId: lead.id,
+                    leadName: lead.nome,
+                    timestamp: new Date(lead.next_follow_up_date),
+                    read: false,
+                });
+            }
 
-        // Inactive leads
-        inactiveLeads?.forEach(lead => {
-            notifs.push({
-                id: `inactive-${lead.id}`,
-                type: 'no_response',
-                title: 'Lead inattivo',
-                message: `${lead.nome} non risponde da 7 giorni`,
-                leadId: lead.id,
-                leadName: lead.nome,
-                timestamp: new Date(lead.last_contact_date || lead.created_at),
-                read: false,
-            });
-        });
+            // Inactive leads (no contact in 7 days)
+            if (lead.last_contact_date && lead.last_contact_date < sevenDaysAgo.toISOString()) {
+                notifs.push({
+                    id: `inactive-${lead.id}`,
+                    type: 'no_response',
+                    title: 'Lead inattivo',
+                    message: `${lead.nome} non risponde da 7 giorni`,
+                    leadId: lead.id,
+                    leadName: lead.nome,
+                    timestamp: new Date(lead.last_contact_date),
+                    read: false,
+                });
+            }
 
-        // HOT leads
-        hotLeads?.forEach(lead => {
-            notifs.push({
-                id: `hot-${lead.id}`,
-                type: 'hot_lead',
-                title: 'Nuovo Lead HOT!',
-                message: `${lead.nome} - Punteggio: ${lead.punteggio}`,
-                leadId: lead.id,
-                leadName: lead.nome,
-                timestamp: new Date(lead.created_at),
-                read: false,
-            });
+            // HOT leads created today
+            if (lead.lead_quality === 'HOT' && lead.created_at >= todayStr) {
+                notifs.push({
+                    id: `hot-${lead.id}`,
+                    type: 'hot_lead',
+                    title: 'Nuovo Lead HOT!',
+                    message: `${lead.nome} - Punteggio: ${lead.punteggio}`,
+                    leadId: lead.id,
+                    leadName: lead.nome,
+                    timestamp: new Date(lead.created_at),
+                    read: false,
+                });
+            }
         });
 
         // Sort by timestamp (most recent first)

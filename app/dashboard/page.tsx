@@ -1,8 +1,15 @@
+import dynamic from 'next/dynamic';
 import { supabase } from '@/lib/supabase';
 import { StatsCard } from '@/components/dashboard/StatsCards';
-import { LeadsChart } from '@/components/dashboard/LeadsChart';
 import { RecentLeads } from '@/components/dashboard/RecentLeads';
-import EnhancedFollowUpWidget from '@/components/dashboard/EnhancedFollowUpWidget';
+
+const LeadsChart = dynamic(() => import('@/components/dashboard/LeadsChart').then(m => ({ default: m.LeadsChart })), {
+  loading: () => <div className="h-72 bg-white/70 rounded-2xl animate-pulse" />,
+});
+
+const EnhancedFollowUpWidget = dynamic(() => import('@/components/dashboard/EnhancedFollowUpWidget'), {
+  loading: () => <div className="h-96 bg-white/70 rounded-2xl animate-pulse" />,
+});
 
 // Server Component - data fetching happens on server
 export const revalidate = 60; // Revalidate every 60 seconds

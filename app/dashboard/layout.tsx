@@ -1,13 +1,15 @@
 "use client";
 
 import { useState, type ReactNode } from 'react';
+import dynamic from 'next/dynamic';
 import { LayoutDashboard, Users, Activity, BarChart3, Settings, LogOut, Menu, X, Search, Zap } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { usePathname, useRouter } from 'next/navigation';
-import NotificationCenter from '../../components/layout/NotificationCenter';
-import MobileBottomNav from '../../components/mobile/MobileBottomNav';
-import CommandPalette from '../../components/search/CommandPalette';
 import { useCommandPalette } from '../../hooks/useCommandPalette';
+
+const NotificationCenter = dynamic(() => import('../../components/layout/NotificationCenter'), { ssr: false });
+const MobileBottomNav = dynamic(() => import('../../components/mobile/MobileBottomNav'), { ssr: false });
+const CommandPalette = dynamic(() => import('../../components/search/CommandPalette'), { ssr: false });
 
 interface DashboardLayoutProps {
   children: ReactNode;

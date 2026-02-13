@@ -4,6 +4,10 @@ import { supabaseAdmin } from '@/lib/supabase'; // Use Admin client for Cron job
 // import { sendWhatsApp } from '@/lib/whatsapp'; // Placeholder
 
 export async function GET() {
+    if (!supabaseAdmin) {
+        return NextResponse.json({ error: 'Supabase Admin not configured (missing service role key)' }, { status: 500 });
+    }
+
     try {
         // 1. Fetch enrollments due for action
         const { data: enrollments, error } = await supabaseAdmin

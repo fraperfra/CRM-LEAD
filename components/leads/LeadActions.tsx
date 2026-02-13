@@ -47,6 +47,12 @@ export function LeadActions({ lead }: LeadActionsProps) {
         msg = msg.replace(/{{indirizzo}}/g, lead.indirizzo || '')
         msg = msg.replace(/{{telefono}}/g, lead.telefono || '')
         msg = msg.replace(/{{email}}/g, lead.email || '')
+        // New variables
+        msg = msg.replace(/{{tipologia}}/g, lead.tipologia || '')
+        msg = msg.replace(/{{superficie}}/g, lead.superficie ? lead.superficie.toString() : '')
+        msg = msg.replace(/{{prezzo}}/g, lead.valutazione_stimata ? `€ ${lead.valutazione_stimata}` : '')
+        // Generic Agent fallback (since we don't have agent details in Lead object directly other than ID, we use generic signature or fetch it if needed)
+        // For now, we leave agent vars empty or replace with generic if requested, but user didn't ask for agent specific vars yet, just tipologia.
 
         setPreviewMessage(msg)
     }

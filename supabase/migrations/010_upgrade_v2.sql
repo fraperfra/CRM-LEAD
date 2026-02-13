@@ -304,6 +304,7 @@ CREATE POLICY "Enable all access for authenticated users" ON saved_filters FOR A
 -- ============================================
 
 -- Lead con conteggio attività
+DROP VIEW IF EXISTS leads_with_activity_count;
 CREATE OR REPLACE VIEW leads_with_activity_count AS
 SELECT 
     l.*,
@@ -315,6 +316,7 @@ WHERE l.deleted_at IS NULL
 GROUP BY l.id;
 
 -- Lead da followup oggi
+DROP VIEW IF EXISTS leads_followup_today;
 CREATE OR REPLACE VIEW leads_followup_today AS
 SELECT * FROM leads
 WHERE next_follow_up_date::date = CURRENT_DATE
@@ -323,6 +325,7 @@ WHERE next_follow_up_date::date = CURRENT_DATE
 ORDER BY punteggio DESC;
 
 -- Stats dashboard
+DROP VIEW IF EXISTS dashboard_stats;
 CREATE OR REPLACE VIEW dashboard_stats AS
 SELECT
     COUNT(*) as total_leads,

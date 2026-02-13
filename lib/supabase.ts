@@ -629,11 +629,7 @@ export async function updateTemplate(id: string, updates: Partial<Template>) {
   return data as Template;
 }
 
-if (error) {
-  console.error('Error deleting template:', error);
-  throw error;
-}
-}
+
 
 // ============================================
 // DOCUMENTS
